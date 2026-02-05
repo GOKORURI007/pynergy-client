@@ -1,0 +1,38 @@
+[project]
+name = "zotero-mcp-py"
+version = "0.1.2"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+[dependency-groups]
+dev = [
+    "gitpython>=3.1.46",
+    "pytest-cov>=7.0.0",
+    "pytest-dependency>=0.6.0",
+    "pytest-sugar>=1.1.1",
+    "pytest>=9.0.2",
+    "questionary>=2.1.1",
+    "ruff>=0.14.14",
+    "semver>=3.0.4",
+]
+
+[tool.ruff]
+preview = true
+fix-only = true
+show-fixes = true
+output-format = "grouped"
+line-length = 100
+src = [".", "inputflow", "tests"]
+
+[tool.ruff.format]
+preview = true
+docstring-code-format = true
+quote-style = "single"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.ruff.lint]
+preview = true
+select = ["E4", "E7", "E9", "F", "I"]

@@ -1,0 +1,44 @@
+name: Release Build
+
+on:
+  workflow_dispatch:
+#  push:
+#    tags:
+#      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            suffix: linux
+          - os: windows-latest
+            platform: windows
+            suffix: windows.exe
+          - os: macos-latest
+            platform: macos
+            suffix: macos
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          # 如果 Tag 不存在，它会自动创建 Release。如果已存在，它会把文件追加进去
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
