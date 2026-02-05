@@ -1,26 +1,66 @@
 """
 主客户端模块
 
-实现 Synergy 客户端主逻辑，包括网络连接、消息处理循环和命令行参数解析。
+实现 Deskflow 客户端主逻辑，包括网络连接、消息处理循环和命令行参数解析。
 """
 
-import logging
+import os
 import socket
-import sys
+import struct
 from typing import Optional
 
-import click
 from evdev import ecodes
+from loguru import logger
 
 from src.device import VirtualDevice
 from src.protocol import SynergyProtocol
-from src.protocol_types import MessageType
+from src.protocol_types import ClientState, MessageType
 
-logger = logging.getLogger(__name__)
+
+# from loguru import logger
+
+
+def get_screen_size() -> tuple[int, int]:
+    """获取屏幕尺寸
+
+    尝试从环境变量或 X11 获取屏幕尺寸，如果都失败则使用默认值。
+
+    Returns:
+        (width, height) 屏幕宽度和高度
+    """
+    try:
+        import subprocess
+
+        result = subprocess.run(
+            ['xrandr', '--current', '--query'],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        for line in result.stdout.split('\n'):
+            if '*' in line:
+                parts = line.split()
+                for i, part in enumerate(parts):
+                    if part == '*':
+                        continue
+                    try:
+                        width, height = part.split('x')
+                        return int(width), int(height)
+                    except (ValueError, IndexError):
+                        continue
+    except (FileNotFoundError, Exception):
+        pass
+
+    env_width = os.environ.get('SCREEN_WIDTH')
+    env_height = os.environ.get('SCREEN_HEIGHT')
+    if env_width and env_height:
+        return int(env_width), int(env_height)
+
+    return 1920, 1080
 
 
 class SynergyClient:
-    """Synergy 客户端类
+    """Deskflow 客户端类
 
     负责连接服务器、接收消息并将输入事件注入系统。
     """
@@ -30,8 +70,9 @@ class SynergyClient:
         server: str,
         port: int = 24800,
         coords_mode: str = 'relative',
-        screen_width: int = 1920,
-        screen_height: int = 1080,
+        screen_width: Optional[int] = None,
+        screen_height: Optional[int] = None,
+        client_name: str = 'Pynergy',
         device: Optional[VirtualDevice] = None,
     ):
         """初始化客户端
@@ -40,21 +81,29 @@ class SynergyClient:
             server: 服务器 IP 地址
             port: 端口号 (默认: 24800)
             coords_mode: 坐标模式 ('relative' 或 'absolute')
-            screen_width: 屏幕宽度 (用于相对位移计算)
-            screen_height: 屏幕高度 (用于相对位移计算)
+            screen_width: 屏幕宽度 (可选，默认自动获取)
+            screen_height: 屏幕高度 (可选，默认自动获取)
+            client_name: 客户端名称
             device: 虚拟设备实例 (可选，默认自动创建)
         """
         self._server = server
         self._port = port
         self._coords_mode = coords_mode
+        self._client_name = client_name
+
+        if screen_width is None or screen_height is None:
+            screen_width, screen_height = get_screen_size()
         self._screen_width = screen_width
         self._screen_height = screen_height
+
         self._device = device
         self._protocol = SynergyProtocol()
         self._sock: Optional[socket.socket] = None
         self._running = False
+        self._state = ClientState.DISCONNECTED
         self._last_x: Optional[int] = None
         self._last_y: Optional[int] = None
+        self._pressed_keys: set[int] = set()
 
     @property
     def device(self) -> VirtualDevice:
@@ -64,13 +113,77 @@ class SynergyClient:
         return self._device
 
     def connect(self) -> None:
-        """连接 Synergy 服务器"""
+        """连接 Deskflow 服务器并进行握手"""
+        self._state = ClientState.CONNECTING
         logger.info(f'正在连接到 {self._server}:{self._port}...')
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.connect((self._server, self._port))
-        logger.info('已连接，发送握手协议...')
-        self._protocol.handshake(self._sock)
-        logger.info('握手成功')
+
+        self._state = ClientState.HANDSHAKE
+        logger.info('等待服务器 Hello 消息...')
+        msg = self._protocol.recv_message(self._sock)
+
+        server_major, server_minor, protocol_name = self._parse_hello_message(msg)
+        logger.info(f'服务器协议: {protocol_name} {server_major}.{server_minor}')
+
+        logger.info(f'发送 HelloBack，客户端名称: {self._client_name}')
+        hello_back = self._build_hello_back(protocol_name, server_major, server_minor)
+        self._sock.send(hello_back)
+
+        self._state = ClientState.CONNECTED
+        logger.info('握手完成，进入 Connected 状态')
+
+    def _parse_hello_message(self, msg: bytes) -> tuple[int, int, str]:
+        """解析 Hello 消息
+
+        Hello 消息格式: ProtocolName + major(2) + minor(2)
+        例如: b'Barrier\x00\x01\x00\x08' 或 b'Deskflow\x00\x01\x00\x06'
+
+        Args:
+            msg: 原始消息字节
+
+        Returns:
+            (major, minor, protocol_name) 版本号和协议名称
+        """
+        if len(msg) < 11:
+            raise ValueError(f'Hello 消息长度不足: {len(msg)}')
+
+        protocol_names = [b'Deskflow', b'Barrier', b'Synergy']
+        protocol_name = None
+        protocol_len = 0
+        for name in protocol_names:
+            if msg.startswith(name):
+                protocol_name = name.decode('utf-8')
+                protocol_len = len(name)
+                break
+
+        if protocol_name is None:
+            raise ValueError(f'未知的协议名称: {msg[:8]}')
+
+        major, minor = struct.unpack('>HH', msg[protocol_len: protocol_len + 4])
+        return major, minor, protocol_name
+
+    def _build_hello_back(self, protocol_name: str, major: int, minor: int) -> bytes:
+        """构建 HelloBack 消息
+
+        HelloBack 格式: ProtocolName + major(2) + minor(2) + nameLen(4) + name
+        例如: b'Barrier\x00\x01\x00\x08\x00\x00\x00\x0bworkstation'
+
+        Args:
+            protocol_name: 协议名称
+            major: 主版本号
+            minor: 次版本号
+
+        Returns:
+            HelloBack 消息字节
+        """
+        name_bytes = self._client_name.encode('utf-8')
+        name_len = struct.pack('>I', len(name_bytes))
+        msg = (
+            protocol_name.encode('utf-8') + struct.pack('>HH', major, minor) + name_len + name_bytes
+        )
+        header = struct.pack('>I', len(msg))
+        return header + msg
 
     def run(self) -> None:
         """运行主事件循环"""
@@ -101,23 +214,123 @@ class SynergyClient:
             msg_type: 消息类型
             params: 消息参数
         """
+        if msg_type == MessageType.QINF:
+            logger.info('收到 QINF 查询屏幕信息，发送 DINF')
+            dinf = self._protocol.build_dinf(
+                self._screen_width,
+                self._screen_height,
+                0,
+                0,
+            )
+            assert self._sock is not None
+            self._sock.send(dinf)
+            return
+
+        elif msg_type == MessageType.CINN:
+            logger.info(f'进入屏幕，位置: ({params["x"]}, {params["y"]})')
+            self._state = ClientState.ACTIVE
+            modifiers = params.get('modifiers', 0)
+            self._sync_modifiers(modifiers)
+            self._last_x = None
+            self._last_y = None
+            return
+
+        elif msg_type == MessageType.COUT:
+            logger.info('离开屏幕')
+            self._state = ClientState.CONNECTED
+            self._release_all_keys()
+            return
+
+        elif msg_type == MessageType.CALV:
+            logger.debug('收到心跳，响应 CALV')
+            assert self._sock is not None
+            self._sock.send(self._protocol.build_calv())
+            return
+
+        elif msg_type == MessageType.CBYE:
+            logger.info('收到关闭连接消息')
+            self._running = False
+            return
+
+        elif msg_type == MessageType.EICV:
+            reason = params.get('reason', 0)
+            logger.error(f'版本不兼容错误: {reason}')
+            self._running = False
+            return
+
+        elif msg_type == MessageType.EBSY:
+            logger.error('服务器忙')
+            self._running = False
+            return
+
+        if self._state != ClientState.ACTIVE:
+            logger.debug(f'忽略消息 {msg_type}，当前状态: {self._state}')
+            return
+
         device = self.device
+
         if msg_type == MessageType.DMMV:
             x, y = params['x'], params['y']
             if self._coords_mode == 'relative':
                 dx, dy = self._abs_to_rel(x, y)
-                device.write_mouse_move(dx, dy)
+                if dx != 0 or dy != 0:
+                    device.write_mouse_move(dx, dy)
             else:
                 self._write_mouse_abs(x, y)
-        elif msg_type == MessageType.DKDN:
-            device.write_key(params['key_code'], True)
-        elif msg_type == MessageType.DKUP:
-            device.write_key(params['key_code'], False)
-        elif msg_type == MessageType.DMDN:
-            device.write_key(params['button'], True)
-        elif msg_type == MessageType.DMUP:
-            device.write_key(params['button'], False)
 
+        elif msg_type == MessageType.DMRM:
+            dx, dy = params['dx'], params['dy']
+            if dx != 0 or dy != 0:
+                device.write_mouse_move(dx, dy)
+
+        elif msg_type == MessageType.DKDN:
+            key_code = params['key_code']
+            self._pressed_keys.add(key_code)
+            device.write_key(key_code, True)
+
+        elif msg_type == MessageType.DKUP:
+            key_code = params['key_code']
+            self._pressed_keys.discard(key_code)
+            device.write_key(key_code, False)
+
+        elif msg_type == MessageType.DMDN:
+            button = params['button']
+            device.write_key(button, True)
+
+        elif msg_type == MessageType.DMUP:
+            button = params['button']
+            device.write_key(button, False)
+
+        elif msg_type == MessageType.DMWM:
+            x = params.get('x', 0)
+            y = params.get('y', 0)
+            if y != 0:
+                device.write(ecodes.EV_REL, ecodes.REL_WHEEL, y)
+            if x != 0:
+                device.write(ecodes.EV_REL, ecodes.REL_HWHEEL, x)
+
+        elif msg_type == MessageType.DKRP:
+            key_code = params['key_code']
+            if key_code not in self._pressed_keys:
+                self._pressed_keys.add(key_code)
+                device.write_key(key_code, True)
+
+        device.syn()
+
+    def _sync_modifiers(self, modifiers: int) -> None:
+        """同步修饰键状态
+
+        Args:
+            modifiers: 修饰键位掩码
+        """
+        pass
+
+    def _release_all_keys(self) -> None:
+        """释放所有按下的键"""
+        device = self.device
+        for key_code in list(self._pressed_keys):
+            device.write_key(key_code, False)
+            self._pressed_keys.discard(key_code)
         device.syn()
 
     def _abs_to_rel(self, x: int, y: int) -> tuple[int, int]:
@@ -154,6 +367,7 @@ class SynergyClient:
     def close(self) -> None:
         """关闭连接和设备"""
         self._running = False
+        self._state = ClientState.DISCONNECTED
         if self._sock:
             self._sock.close()
             self._sock = None
@@ -165,81 +379,3 @@ class SynergyClient:
     def stop(self) -> None:
         """停止客户端"""
         self._running = False
-
-
-@click.command()
-@click.option(
-    '--server',
-    '-s',
-    required=True,
-    help='Synergy 服务器 IP 地址',
-)
-@click.option(
-    '--port',
-    '-p',
-    default=24800,
-    help='端口号 (默认: 24800)',
-)
-@click.option(
-    '--coords-mode',
-    type=click.Choice(['relative', 'absolute']),
-    default='relative',
-    help='坐标模式: relative=相对位移, absolute=绝对坐标',
-)
-@click.option(
-    '--screen-width',
-    type=int,
-    default=1920,
-    help='屏幕宽度 (用于相对位移计算, 默认: 1920)',
-)
-@click.option(
-    '--screen-height',
-    type=int,
-    default=1080,
-    help='屏幕高度 (用于相对位移计算, 默认: 1080)',
-)
-@click.option(
-    '--verbose',
-    '-v',
-    count=True,
-    help='详细输出 (可多次使用增加详细程度)',
-)
-def main(
-    server: str,
-    port: int,
-    coords_mode: str,
-    screen_width: int,
-    screen_height: int,
-    verbose: int,
-) -> None:
-    """PyDeskFlow - Synergy 客户端
-
-    连接 Synergy 服务器并将输入事件注入系统。
-    """
-    log_level = logging.WARNING - verbose * 10
-    logging.basicConfig(
-        level=max(log_level, logging.DEBUG),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        stream=sys.stderr,
-    )
-
-    logger.info(f'启动客户端，服务器: {server}:{port}, 坐标模式: {coords_mode}')
-
-    try:
-        client = SynergyClient(
-            server=server,
-            port=port,
-            coords_mode=coords_mode,
-            screen_width=screen_width,
-            screen_height=screen_height,
-        )
-        client.run()
-    except KeyboardInterrupt:
-        logger.info('收到中断信号，正在退出...')
-    except Exception as e:
-        logger.error(f'客户端错误: {e}')
-        sys.exit(1)
-
-
-if __name__ == '__main__':
-    main()
