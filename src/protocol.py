@@ -93,25 +93,27 @@ class SynergyProtocol:
         return major, minor, name
 
     def build_dinf(
-        self, left: int, top: int, width: int, height: int, warp_x: int = 0, warp_y: int = 0
+        self, left: int, top: int, width: int, height: int, mouse_x: int = 0, mouse_y: int = 0
     ) -> bytes:
         """构建屏幕信息消息
 
-        DINF: left(2) + top(2) + width(2) + height(2) + warp_x(2) + warp_y(2)
+        DINF: left(2) + top(2) + width(2) + height(2) + warp(2) + mouse_x(2) + mouse_y(2)
 
         参数:
             left: 左边缘坐标 (signed)
             top: 上边缘坐标 (signed)
             width: 屏幕宽度 (unsigned)
             height: 屏幕高度 (unsigned)
-            warp_x: 鼠标 Warp X 坐标 (signed)
-            warp_y: 鼠标 Warp Y 坐标 (signed)
+            warp: obsolete
+            mouse_x: 鼠标 Warp X 坐标 (signed)
+            mouse_y: 鼠标 Warp Y 坐标 (signed)
 
         返回:
             DINF 消息字节
         """
-        msg = b'DINF' + struct.pack('>hhHHHH', left, top, width, height, warp_x, warp_y)
-        return msg
+        msg = b'DINF' + struct.pack('>hhHHHHH', left, top, width, height, 0, mouse_x, mouse_y)
+        header = struct.pack('>I', len(msg))
+        return header + msg
 
     def parse_dinf(self, msg: bytes) -> dict:
         """解析屏幕信息消息
@@ -386,6 +388,8 @@ class SynergyProtocol:
             return self._parse_eicv_msg(msg)
         elif cmd == b'EBSY':
             return self._parse_ebsy_msg(msg)
+        elif cmd == b'LSYN':
+            return self._parse_lsyn_msg(msg)
         else:
             raise ValueError(f'未知消息类型: {cmd}')
 
@@ -617,3 +621,22 @@ class SynergyProtocol:
         """
         params = self.parse_ebsy(msg)
         return MessageType.EBSY, params
+
+    def _parse_lsyn_msg(self, msg: bytes) -> ParsedMessage:
+        """解析 LSYN 消息（语言列表同步）
+
+        LSYN: 语言代码字符串，每两个字符表示一种语言
+        格式: LSYN + len(4) + language_str
+
+        参数:
+            msg: 原始消息
+
+        返回:
+            {'languages': ['zh', 'en']}
+        """
+        if len(msg) < 8:
+            raise ValueError(f'LSYN 消息长度不足: {len(msg)}')
+        lang_len = struct.unpack('>I', msg[4:8])[0]
+        language_str = msg[8: 8 + lang_len].decode('utf-8')
+        languages = [language_str[i: i + 2] for i in range(0, len(language_str), 2)]
+        return MessageType.LSYN, {'languages': languages}
