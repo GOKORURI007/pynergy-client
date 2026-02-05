@@ -1,9 +1,13 @@
 [project]
-name = "zotero-mcp-py"
-version = "0.1.2"
+name = "pydeskflow-unsafe-client"
+version = "0.0.0"
 description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
+    "evdev>=1.9.2; sys_platform == 'linux'",
+    "loguru>=0.7.3",
+    "toml>=0.10.2",
+    "click>=8.3.1",
 ]
 
 [dependency-groups]

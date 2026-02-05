@@ -3,5 +3,6 @@
 **/htmlcov/
 .venv/
 .idea/
+.direnv/
 
 **/.coverage
