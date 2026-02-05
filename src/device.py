@@ -119,6 +119,16 @@ class VirtualDevice:
         value = 1 if pressed else 0
         self._ui.write(ecodes.EV_KEY, key_code, value)
 
+    def write(self, event_type: int, event_code: int, value: int) -> None:
+        """写入任意事件
+
+        Args:
+            event_type: 事件类型 (EV_REL, EV_KEY, EV_ABS 等)
+            event_code: 事件代码
+            value: 事件值
+        """
+        self._ui.write(event_type, event_code, value)
+
     def syn(self) -> None:
         """同步事件
 

@@ -145,6 +145,19 @@ class TestSync:
             mock_instance.syn.assert_called_once()
 
 
+class TestWrite:
+    """通用写入测试"""
+
+    def test_write_event(self):
+        """测试通用事件写入"""
+        with patch('evdev.UInput') as mock_ui:
+            mock_instance = MagicMock()
+            mock_ui.return_value = mock_instance
+            device = VirtualDevice()
+            device.write(ecodes.EV_ABS, ecodes.ABS_X, 32768)
+            mock_instance.write.assert_called_with(ecodes.EV_ABS, ecodes.ABS_X, 32768)
+
+
 class TestClose:
     """关闭测试"""
 
