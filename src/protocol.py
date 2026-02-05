@@ -92,37 +92,48 @@ class SynergyProtocol:
         name = msg[12:name_end].decode('utf-8')
         return major, minor, name
 
-    def build_dinf(self, width: int, height: int, x: int = 0, y: int = 0) -> bytes:
+    def build_dinf(
+        self, left: int, top: int, width: int, height: int, warp_x: int = 0, warp_y: int = 0
+    ) -> bytes:
         """构建屏幕信息消息
 
-        DINF: w(2) + h(2) + x(2) + y(2)
+        DINF: left(2) + top(2) + width(2) + height(2) + warp_x(2) + warp_y(2)
 
-        Args:
-            width: 屏幕宽度
-            height: 屏幕高度
-            x: X 偏移
-            y: Y 偏移
+        参数:
+            left: 左边缘坐标 (signed)
+            top: 上边缘坐标 (signed)
+            width: 屏幕宽度 (unsigned)
+            height: 屏幕高度 (unsigned)
+            warp_x: 鼠标 Warp X 坐标 (signed)
+            warp_y: 鼠标 Warp Y 坐标 (signed)
 
-        Returns:
+        返回:
             DINF 消息字节
         """
-        msg = b'DINF' + struct.pack('>HHHH', width, height, x, y)
-        header = struct.pack('>I', len(msg))
-        return header + msg
+        msg = b'DINF' + struct.pack('>hhHHHH', left, top, width, height, warp_x, warp_y)
+        return msg
 
     def parse_dinf(self, msg: bytes) -> dict:
         """解析屏幕信息消息
 
-        Args:
+        参数:
             msg: 原始消息字节
 
-        Returns:
-            {'width': w, 'height': h, 'x': x, 'y': y}
+        返回:
+            {'left': left, 'top': top, 'width': width, 'height': height,
+             'warp_x': warp_x, 'warp_y': warp_y}
         """
-        if len(msg) < 12:
+        if len(msg) < 18:
             raise ValueError(f'DINF 消息长度不足: {len(msg)}')
-        width, height, x, y = struct.unpack('>HHHH', msg[4:12])
-        return {'width': width, 'height': height, 'x': x, 'y': y}
+        left, top, width, height, warp_x, warp_y = struct.unpack('>hhHHHHH', msg[4:18])
+        return {
+            'left': left,
+            'top': top,
+            'width': width,
+            'height': height,
+            'warp_x': warp_x,
+            'warp_y': warp_y,
+        }
 
     def build_cinn(self, x: int, y: int, sequence: int = 0, modifiers: int = 0) -> bytes:
         """构建进入屏幕消息

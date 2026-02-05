@@ -217,6 +217,8 @@ class SynergyClient:
         if msg_type == MessageType.QINF:
             logger.info('收到 QINF 查询屏幕信息，发送 DINF')
             dinf = self._protocol.build_dinf(
+                0,
+                0,
                 self._screen_width,
                 self._screen_height,
                 0,
