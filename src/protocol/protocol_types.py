@@ -1,0 +1,93 @@
+"""
+协议类型定义模块
+
+定义 Deskflow 协议中使用的消息类型和类型别名。
+"""
+
+from enum import Enum
+
+
+class MsgType(str, Enum):
+    """Deskflow message type enum"""
+
+    # --- handshake ---
+    Hello = "Hello"
+    HelloBack = "HelloBack"
+
+    # --- command ---
+    CCLP = "CCLP"
+    """Clipboard grab notification"""
+    CClose = "CClose"
+    """Close connection command"""
+    CINN = "CINN"
+    """Enter screen command"""
+    CIAK = "CIAK"
+    """Screen information acknowledgment"""
+    CALV = "CALV"
+    """Keep-alive message"""
+    COUT = "COUT"
+    """Leave screen command"""
+    CNOP = "CNOP"
+    """No operation command"""
+    CROP = "CROP"
+    """Reset options command"""
+    CSEC = "CSEC"
+    """Screensaver state change"""
+
+    # --- data ---
+    DKDN = "DKDN"
+    """Key press event"""
+    DKDL = "DKDL"
+    """Key press with language code"""
+    DKRP = "DKRP"
+    """Key auto-repeat event"""
+    DKUP = "DKUP"
+    """Key release event"""
+    DMDN = "DMDN"
+    """Mouse press event"""
+    DMMV = "DMMV"
+    """Mouse move event"""
+    DMRM = "DMRM"
+    """Relative mouse movement"""
+    DMUP = "DMUP"
+    """Mouse release event"""
+    DMWM = "DMWM"
+    """Mouse wheel scroll event"""
+    DCLP = "DCLP"
+    """Clipboard data transfer"""
+    DINF = "DINF"
+    """Client screen information"""
+    DSOP = "DSOP"
+    """Set client options"""
+    DDRG = "DDRG"
+    """Drag and drop information"""
+    DFTR = "DFTR"
+    """File transfer data"""
+    LSYN = "LSYN"
+    """Language synchronization"""
+    SECN = "SECN"
+    """Secure input notification (macOS)"""
+
+    # --- query ---
+    QINF = "QINF"
+    """Query screen information"""
+
+    # --- error ---
+    EBAD = "EBAD"
+    """Protocol violation"""
+    EBSY = "EBSY"
+    """Client name already in use"""
+    EICV = "EICV"
+    """Incompatible protocol versions"""
+    EUNK = "EUNK"
+    """Unknown client name"""
+
+
+class ClientState(Enum):
+    """客户端状态枚举"""
+
+    DISCONNECTED = 0
+    CONNECTING = 1
+    HANDSHAKE = 2
+    CONNECTED = 3
+    ACTIVE = 4
