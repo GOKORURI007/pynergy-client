@@ -39,6 +39,10 @@ class HelloMsg(MsgBase):
     major: UInt16
     minor: UInt16
 
+    @staticmethod
+    def after_pack(result: bytes) -> bytes:
+        return result[5:]
+
 
 @Registry.register(MsgID.HelloBack)
 @dataclass(slots=True)
@@ -55,6 +59,10 @@ class HelloBackMsg(MsgBase):
     major: UInt16
     minor: UInt16
     name: VarString
+
+    @staticmethod
+    def after_pack(result: bytes) -> bytes:
+        return result[9:]
 
 
 @Registry.register(MsgID.CCLP)
