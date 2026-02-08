@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -46,3 +47,42 @@ def init_logger(
     )
 
     logger.bind(name=name)
+
+
+def get_screen_size() -> tuple[int, int]:
+    """获取屏幕尺寸
+
+    尝试从环境变量或 X11 获取屏幕尺寸，如果都失败则使用默认值。
+
+    Returns:
+        (width, height) 屏幕宽度和高度
+    """
+    try:
+        import subprocess
+
+        result = subprocess.run(
+            ['xrandr', '--current', '--query'],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        for line in result.stdout.split('\n'):
+            if '*' in line:
+                parts = line.split()
+                for i, part in enumerate(parts):
+                    if part == '*':
+                        continue
+                    try:
+                        width, height = part.split('x')
+                        return int(width), int(height)
+                    except (ValueError, IndexError):
+                        continue
+    except (FileNotFoundError, Exception):
+        pass
+
+    env_width = os.environ.get('SCREEN_WIDTH')
+    env_height = os.environ.get('SCREEN_HEIGHT')
+    if env_width and env_height:
+        return int(env_width), int(env_height)
+
+    return 1920, 1080
