@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from src.protocol.core import MsgBase, Registry
-from src.protocol.protocol_types import MsgType
+from src.protocol.protocol_types import MsgID
 from src.protocol.struct_types import (
     Bool,
     FixedString,
@@ -13,7 +13,7 @@ from src.protocol.struct_types import (
 )
 
 
-@Registry.register(MsgType.Hello)
+@Registry.register(MsgID.Hello)
 @dataclass(slots=True)
 class HelloMsg(MsgBase):
     """hello message
@@ -40,7 +40,7 @@ class HelloMsg(MsgBase):
     minor: UInt16
 
 
-@Registry.register(MsgType.HelloBack)
+@Registry.register(MsgID.HelloBack)
 @dataclass(slots=True)
 class HelloBackMsg(MsgBase):
     """Client hello response message
@@ -57,7 +57,7 @@ class HelloBackMsg(MsgBase):
     name: VarString
 
 
-@Registry.register(MsgType.CCLP)
+@Registry.register(MsgID.CCLP)
 @dataclass(slots=True)
 class CClipboardMsg(MsgBase):
     """Clipboard grab notification
@@ -76,7 +76,7 @@ class CClipboardMsg(MsgBase):
     sequence: UInt32
 
 
-@Registry.register(MsgType.CBYE)
+@Registry.register(MsgID.CBYE)
 @dataclass(slots=True)
 class CCloseMsg(MsgBase):
     """Close connection command
@@ -86,7 +86,7 @@ class CCloseMsg(MsgBase):
     """
 
 
-@Registry.register(MsgType.CINN)
+@Registry.register(MsgID.CINN)
 @dataclass(slots=True)
 class CEnterMsg(MsgBase):
     """Enter screen command
@@ -110,7 +110,7 @@ class CEnterMsg(MsgBase):
     mod_key_mask: UInt16
 
 
-@Registry.register(MsgType.CIAK)
+@Registry.register(MsgID.CIAK)
 @dataclass(slots=True)
 class CInfoAckMsg(MsgBase):
     """Screen information acknowledgment
@@ -121,7 +121,7 @@ class CInfoAckMsg(MsgBase):
     """
 
 
-@Registry.register(MsgType.CALV)
+@Registry.register(MsgID.CALV)
 @dataclass(slots=True)
 class CKeepAliveMsg(MsgBase):
     """Keep-alive message
@@ -141,7 +141,7 @@ class CKeepAliveMsg(MsgBase):
     """
 
 
-@Registry.register(MsgType.COUT)
+@Registry.register(MsgID.COUT)
 @dataclass(slots=True)
 class CLeaveMsg(MsgBase):
     """Leave screen command
@@ -154,7 +154,7 @@ class CLeaveMsg(MsgBase):
     """
 
 
-@Registry.register(MsgType.CNOP)
+@Registry.register(MsgID.CNOP)
 @dataclass(slots=True)
 class CNoopMsg(MsgBase):
     """No operation command
@@ -164,7 +164,7 @@ class CNoopMsg(MsgBase):
     """
 
 
-@Registry.register(MsgType.CROP)
+@Registry.register(MsgID.CROP)
 @dataclass(slots=True)
 class CResetOptionsMsg(MsgBase):
     """Reset options command
@@ -174,7 +174,7 @@ class CResetOptionsMsg(MsgBase):
     """
 
 
-@Registry.register(MsgType.CSEC)
+@Registry.register(MsgID.CSEC)
 @dataclass(slots=True)
 class CScreenSaverMsg(MsgBase):
     """Screensaver state change
@@ -189,7 +189,7 @@ class CScreenSaverMsg(MsgBase):
     state: Bool
 
 
-@Registry.register(MsgType.DKDN)
+@Registry.register(MsgID.DKDN)
 @dataclass(slots=True)
 class DKeyDownMsg(MsgBase):
     """Key press event
@@ -221,7 +221,7 @@ class DKeyDownMsg(MsgBase):
     key_button: UInt16
 
 
-@Registry.register(MsgType.DKDL)
+@Registry.register(MsgID.DKDL)
 @dataclass(slots=True)
 class DKeyDownLangMsg(MsgBase):
     """Key press with language code
@@ -249,7 +249,7 @@ class DKeyDownLangMsg(MsgBase):
     language_code: VarString
 
 
-@Registry.register(MsgType.DKRP)
+@Registry.register(MsgID.DKRP)
 @dataclass(slots=True)
 class DKeyRepeatMsg(MsgBase):
     """Key auto-repeat event
@@ -279,7 +279,7 @@ class DKeyRepeatMsg(MsgBase):
     language_code: VarString
 
 
-@Registry.register(MsgType.DKUP)
+@Registry.register(MsgID.DKUP)
 @dataclass(slots=True)
 class DKeyUpMsg(MsgBase):
     """Key release event
@@ -303,7 +303,7 @@ class DKeyUpMsg(MsgBase):
     key_button: UInt16
 
 
-@Registry.register(MsgType.DMDN)
+@Registry.register(MsgID.DMDN)
 @dataclass(slots=True)
 class DMouseDownMsg(MsgBase):
     """Mouse press event
@@ -321,7 +321,7 @@ class DMouseDownMsg(MsgBase):
     button: UInt8
 
 
-@Registry.register(MsgType.DMMV)
+@Registry.register(MsgID.DMMV)
 @dataclass(slots=True)
 class DMouseMoveMsg(MsgBase):
     """Mouse move event
@@ -338,9 +338,9 @@ class DMouseMoveMsg(MsgBase):
     y: Int16
 
 
-@Registry.register(MsgType.DMRM)
+@Registry.register(MsgID.DMRM)
 @dataclass(slots=True)
-class MouseRelMoveMsg(MsgBase):
+class DMouseRelMoveMsg(MsgBase):
     """Relative mouse movement
 
     Relative movement is useful for:
@@ -357,7 +357,7 @@ class MouseRelMoveMsg(MsgBase):
     y_delta: Int16
 
 
-@Registry.register(MsgType.DMUP)
+@Registry.register(MsgID.DMUP)
 @dataclass(slots=True)
 class DMouseUpMsg(MsgBase):
     """Mouse release event
@@ -371,7 +371,7 @@ class DMouseUpMsg(MsgBase):
     button: UInt8
 
 
-@Registry.register(MsgType.DMWM)
+@Registry.register(MsgID.DMWM)
 @dataclass(slots=True)
 class DMouseWheelMsg(MsgBase):
     """Mouse wheel scroll event
@@ -394,7 +394,7 @@ class DMouseWheelMsg(MsgBase):
     y_delta: Int16
 
 
-@Registry.register(MsgType.DCLP)
+@Registry.register(MsgID.DCLP)
 @dataclass(slots=True)
 class DClipboardMsg(MsgBase):
     """Clipboard data transfer
@@ -430,7 +430,7 @@ class DClipboardMsg(MsgBase):
     data: VarString
 
 
-@Registry.register(MsgType.DINF)
+@Registry.register(MsgID.DINF)
 @dataclass(slots=True)
 class DInfoMsg(MsgBase):
     """Client screen information
@@ -468,7 +468,7 @@ class DInfoMsg(MsgBase):
     mouse_y: Int16
 
 
-@Registry.register(MsgType.DSOP)
+@Registry.register(MsgID.DSOP)
 @dataclass(slots=True)
 class DSetOptionsMsg(MsgBase):
     """Set client options
@@ -491,7 +491,7 @@ class DSetOptionsMsg(MsgBase):
     def unpack(cls, data: bytes): ...
 
 
-@Registry.register(MsgType.DDRG)
+@Registry.register(MsgID.DDRG)
 @dataclass(slots=True)
 class DDragInfoMsg(MsgBase):
     """Drag and drop information
@@ -519,7 +519,7 @@ class DDragInfoMsg(MsgBase):
     def unpack(cls, data: bytes): ...
 
 
-@Registry.register(MsgType.DFTR)
+@Registry.register(MsgID.DFTR)
 @dataclass(slots=True)
 class DFileTransferMsg(MsgBase):
     """File transfer data
@@ -555,7 +555,7 @@ class DFileTransferMsg(MsgBase):
     def unpack(cls, data: bytes): ...
 
 
-@Registry.register(MsgType.LSYN)
+@Registry.register(MsgID.LSYN)
 @dataclass(slots=True)
 class DLanguageSynchronisationMsg(MsgBase):
     """Language synchronization
@@ -578,7 +578,7 @@ class DLanguageSynchronisationMsg(MsgBase):
     lang_list: VarString
 
 
-@Registry.register(MsgType.SECN)
+@Registry.register(MsgID.SECN)
 @dataclass(slots=True)
 class DSecureInputNotificationMsg(MsgBase):
     """Secure input notification (macOS)
@@ -603,7 +603,7 @@ class DSecureInputNotificationMsg(MsgBase):
     app_name: VarString
 
 
-@Registry.register(MsgType.QINF)
+@Registry.register(MsgID.QINF)
 @dataclass(slots=True)
 class QInfoMsg(MsgBase):
     """Query screen information
@@ -621,7 +621,7 @@ class QInfoMsg(MsgBase):
     """
 
 
-@Registry.register(MsgType.EBAD)
+@Registry.register(MsgID.EBAD)
 @dataclass(slots=True)
 class EBadMsg(MsgBase):
     """Protocol violation
@@ -643,7 +643,7 @@ class EBadMsg(MsgBase):
     """
 
 
-@Registry.register(MsgType.EBSY)
+@Registry.register(MsgID.EBSY)
 @dataclass(slots=True)
 class EBusyMsg(MsgBase):
     """Client name already in use
@@ -658,7 +658,7 @@ class EBusyMsg(MsgBase):
     """
 
 
-@Registry.register(MsgType.EICV)
+@Registry.register(MsgID.EICV)
 @dataclass(slots=True)
 class EIncompatibleMsg(MsgBase):
     """Incompatible protocol versions
@@ -680,7 +680,7 @@ class EIncompatibleMsg(MsgBase):
     minor: UInt16
 
 
-@Registry.register(MsgType.EUNK)
+@Registry.register(MsgID.EUNK)
 @dataclass(slots=True)
 class EUnknownMsg(MsgBase):
     """Unknown client name

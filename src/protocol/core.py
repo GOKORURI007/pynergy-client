@@ -4,7 +4,7 @@ from typing import Annotated, Literal, TypeAlias, get_args, get_origin, get_type
 
 from loguru import logger
 
-from src.protocol.protocol_types import MsgType
+from src.protocol.protocol_types import MsgID
 
 OpCode: TypeAlias = Literal['FIX_VAL', 'FIX_STR', 'VAR_STR']
 InstructionType: TypeAlias = list[tuple[OpCode, int, str]]
@@ -204,10 +204,10 @@ class MsgBase:
 
 
 class Registry:
-    _MAPPING: dict[MsgType, MsgBase] = {}
+    _MAPPING: dict[MsgID, MsgBase] = {}
 
     @classmethod
-    def register(cls, msg_code: MsgType):
+    def register(cls, msg_code: MsgID):
         def wrapper(subclass):
             if not issubclass(subclass, MsgBase):
                 raise TypeError(f'注册的类 {subclass.__name__} 必须继承自 MsgBase')
@@ -223,7 +223,7 @@ class Registry:
         return wrapper
 
     @classmethod
-    def get_class(cls, msg_code: MsgType) -> MsgBase:
+    def get_class(cls, msg_code: MsgID) -> MsgBase:
         if msg_code not in cls._MAPPING:
             logger.warning(f'未找到消息类型: {msg_code}')
             raise KeyError(f'未注册的消息类型: {msg_code}')
@@ -233,11 +233,11 @@ class Registry:
         return result
 
     @classmethod
-    def get_registered_types(cls) -> list[MsgType]:
+    def get_registered_types(cls) -> list[MsgID]:
         """返回所有已注册的消息类型"""
         return list(cls._MAPPING.keys())
 
     @classmethod
-    def is_registered(cls, msg_code: MsgType) -> bool:
+    def is_registered(cls, msg_code: MsgID) -> bool:
         """检查消息类型是否已注册"""
         return msg_code in cls._MAPPING

@@ -7,7 +7,7 @@
 from enum import Enum
 
 
-class MsgType(str, Enum):
+class MsgID(str, Enum):
     """Deskflow message type enum"""
 
     # --- handshake ---
