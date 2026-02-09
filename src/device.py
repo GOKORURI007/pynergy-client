@@ -57,13 +57,6 @@ class VirtualDevice:
                 ecodes.REL_WHEEL,
                 ecodes.REL_HWHEEL,
             ],
-            ecodes.EV_ABS: [
-                ecodes.ABS_X,
-                ecodes.ABS_Y,
-                ecodes.ABS_WHEEL,
-                ecodes.ABS_HAT0X,
-                ecodes.ABS_HAT0Y,
-            ],
             ecodes.EV_KEY: self._get_key_codes(),
         }
         return capabilities
