@@ -40,6 +40,10 @@ class HelloMsg(MsgBase):
     minor: UInt16
 
     @staticmethod
+    def before_unpack(data: bytes) -> bytes:
+        return data
+
+    @staticmethod
     def after_pack(result: bytes) -> bytes:
         return result[5:]
 
@@ -59,6 +63,10 @@ class HelloBackMsg(MsgBase):
     major: UInt16
     minor: UInt16
     name: VarString
+
+    @staticmethod
+    def before_unpack(data: bytes) -> bytes:
+        return data
 
     @staticmethod
     def after_pack(result: bytes) -> bytes:

@@ -73,7 +73,7 @@ class MsgBase:
     def unpack(cls: T, data: bytes) -> T:
         try:
             logger.debug(f'开始解包 {cls.__name__}: 数据长度={len(data)} 字节')
-            cls.before_unpack(data)
+            data = cls.before_unpack(data)
             offset = 0
             args = []
 
@@ -210,10 +210,18 @@ class MsgBase:
             logger.error(f'打包 {self.__class__.__name__} 失败: {e}', exc_info=True)
             raise
 
+    def pack_for_socket(self) -> bytes:
+        """
+        在消息体前追加 4 字节的长度前缀 (Big-endian)
+        """
+        payload = self.pack()
+        # '!I' 代表 Network byte order (Big-endian) unsigned int
+        return struct.pack('>I', len(payload)) + payload
+
     @staticmethod
     def before_unpack(data: bytes) -> bytes:
         """在解包前执行"""
-        return data
+        return data[4:]
 
     @staticmethod
     def after_unpack(result: T) -> T:
