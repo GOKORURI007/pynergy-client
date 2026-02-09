@@ -144,7 +144,7 @@ def main(server: str, port: int, coords_mode: str):
 def run(self):
     self.connect()
     while self._running:
-        msg = self._protocol.recv_message(self._sock)
+        msg = self._protocol.recv_message(self.sock)
         msg_type, params = self._protocol.parse_message(msg)
         self._handle_message(msg_type, params)
 
@@ -152,7 +152,7 @@ def run(self):
 def _handle_message(self, msg_type, params):
     if msg_type == 'DMMV':
         x, y = params['x'], params['y']
-        if self._coords_mode == 'relative':
+        if self.coords_mode == 'relative':
             dx, dy = self._abs_to_rel(x, y)
             self._device.write_mouse_move(dx, dy)
         else:
@@ -199,8 +199,8 @@ def _abs_to_rel(self, x: int, y: int) -> tuple[int, int]:
         return 0, 0
 
     # 根据屏幕分辨率归一化
-    screen_width = self._screen_width or 1920
-    screen_height = self._screen_height or 1080
+    screen_width = self.screen_width or 1920
+    screen_height = self.screen_height or 1080
 
     # 计算相对位移（缩放到合理范围）
     dx = int((x - self._last_x) * (screen_width / 65535))
