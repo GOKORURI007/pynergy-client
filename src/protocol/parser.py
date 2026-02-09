@@ -24,7 +24,6 @@ class SynergyParser:
         :param get_class_func: 获取消息类的函数（用于区分 next_msg 和 next_handshake_msg）
         :return: 解析成功的消息对象或 None
         """
-        msg_code_raw = 'unknown'
         total_packet_size = 0
 
         # 基础长度检查（前 4 字节为包长度）
@@ -56,17 +55,17 @@ class SynergyParser:
 
                 if not cls:
                     logger.warning(
-                        f'Unknown message code: {msg_code_raw}, size: {length}. Skipping.'
+                        f'Unknown message code: {packet[:4].decode()}, size: {length}. Skipping.'
                     )
                     return None
 
                 # 4. 执行反序列化
                 msg_obj = cls.unpack(packet)
-                logger.debug(f'Successfully parsed message: {msg_code_raw}')
+                logger.debug(f'Successfully parsed message: {msg_obj}')
                 return msg_obj
 
             except (struct.error, UnicodeDecodeError, ValueError) as e:
-                logger.error(f'Failed to unpack message body (CODE: {msg_code_raw}): {e}')
+                logger.error(f'Failed to unpack message body (CODE: {packet[:4].decode()}): {e}')
                 return None
 
             except Exception as e:
