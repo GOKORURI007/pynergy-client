@@ -76,7 +76,7 @@ class PynergyHandler:
     def on_cinn(self, msg: CEnterMsg):
         logger.debug(f'Handle {msg}')
         logger.info(f'进入屏幕，位置: ({msg.entry_x}, {msg.entry_y})')
-        self.client._state = ClientState.ACTIVE
+        self.client.state = ClientState.ACTIVE
         modifiers = msg.mod_key_mask
         self.client.sync_modifiers(modifiers)
         self.client.last_x = None
