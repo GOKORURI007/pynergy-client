@@ -36,7 +36,7 @@ def device_check(func):
         result = func(self, msg)
 
         # 3. 统一设备同步
-        self._device.syn()
+        self.client.device.syn()
 
         return result
 
@@ -48,8 +48,6 @@ class PynergyHandler:
 
     def __init__(self, client: ClientProtocol):
         self.client = client
-        self._sock = client.sock
-        self._device = client.device
 
     @staticmethod
     def default_handler(msg):
@@ -90,8 +88,8 @@ class PynergyHandler:
 
     def on_calv(self, msg: CKeepAliveMsg):
         logger.debug(f'Handle {msg}')
-        assert self._sock is not None
-        self._sock.sendall(msg.pack_for_socket())
+        assert self.client.sock is not None
+        self.client.sock.sendall(msg.pack_for_socket())
 
     def on_cout(self, msg: MsgBase):
         logger.debug(f'Handle {msg}')
@@ -119,7 +117,7 @@ class PynergyHandler:
 
         key_code = msg.key_button
         self.client.pressed_keys.add(key_code)
-        self._device.write_key(key_code, True)
+        self.client.device.write_key(key_code, True)
 
     @device_check
     def on_dkdl(self, msg: DKeyDownLangMsg):
@@ -127,7 +125,7 @@ class PynergyHandler:
 
         key_code = msg.key_button
         self.client.pressed_keys.add(key_code)
-        self._device.write_key(key_code, True)
+        self.client.device.write_key(key_code, True)
 
     @device_check
     def on_dkrp(self, msg: DKeyRepeatMsg):
@@ -136,7 +134,7 @@ class PynergyHandler:
         key_code = msg.key_button
         if key_code not in self.client.pressed_keys:
             self.client.pressed_keys.add(key_code)
-            self._device.write_key(key_code, True)
+            self.client.device.write_key(key_code, True)
 
     @device_check
     def on_dkup(self, msg: DKeyUpMsg):
@@ -144,14 +142,14 @@ class PynergyHandler:
 
         key_code = msg.key_button
         self.client.pressed_keys.discard(key_code)
-        self._device.write_key(key_code, False)
+        self.client.device.write_key(key_code, False)
 
     @device_check
     def on_dmdn(self, msg: DMouseDownMsg):
         logger.debug(f'Handle {msg}')
 
         button = msg.button
-        self._device.write_key(button, True)
+        self.client.device.write_key(button, True)
 
     @device_check
     def on_dmmv(self, msg: DMouseMoveMsg):
@@ -161,7 +159,7 @@ class PynergyHandler:
         if self.client.coords_mode == 'relative':
             dx, dy = self.client.abs_to_rel(x, y)
             if dx != 0 or dy != 0:
-                self._device.write_mouse_move(dx, dy)
+                self.client.device.write_mouse_move(dx, dy)
         else:
             self.client.write_mouse_abs(x, y)
 
@@ -171,14 +169,14 @@ class PynergyHandler:
 
         dx, dy = msg.x_delta, msg.y_delta
         if dx != 0 or dy != 0:
-            self._device.write_mouse_move(dx, dy)
+            self.client.device.write_mouse_move(dx, dy)
 
     @device_check
     def on_dmup(self, msg: DMouseUpMsg):
         logger.debug(f'Handle {msg}')
 
         button = msg.button
-        self._device.write_key(button, False)
+        self.client.device.write_key(button, False)
 
     @device_check
     def on_dmwm(self, msg: DMouseWheelMsg):
@@ -186,9 +184,9 @@ class PynergyHandler:
 
         x, y = msg.x_delta, msg.y_delta
         if y != 0:
-            self._device.write(ecodes.EV_REL, ecodes.REL_WHEEL, y)
+            self.client.device.write(ecodes.EV_REL, ecodes.REL_WHEEL, y)
         if x != 0:
-            self._device.write(ecodes.EV_REL, ecodes.REL_HWHEEL, x)
+            self.client.device.write(ecodes.EV_REL, ecodes.REL_HWHEEL, x)
 
     @device_check
     def on_dclp(self, msg: MsgBase):
@@ -196,7 +194,7 @@ class PynergyHandler:
 
     def on_dinf(self, msg: MsgBase):
         logger.debug(f'Handle {msg}, 发送 CIAK')
-        self._sock.sendall(CInfoAckMsg().pack_for_socket())
+        self.client.sock.sendall(CInfoAckMsg().pack_for_socket())
 
     @staticmethod
     def on_dsop(msg: MsgBase):
@@ -232,8 +230,8 @@ class PynergyHandler:
             0,
             0,
         )
-        assert self._sock is not None
-        self._sock.sendall(dinf_msg.pack_for_socket())
+        assert self.client.sock is not None
+        self.client.sock.sendall(dinf_msg.pack_for_socket())
 
     def on_ebad(self, msg: MsgBase):
         logger.debug(f'Handle {msg}')
