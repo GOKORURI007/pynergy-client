@@ -16,7 +16,7 @@
       # 把当前目录当 Python 包构建
       pynergy-client = python.pkgs.buildPythonApplication rec {
         pname = "pynergy-client";
-        version = "0.0.1";
+        version = "0.0.5";
         src = ./.;
 
         format = "pyproject"; # 使用 pyproject.toml
@@ -34,6 +34,7 @@
           python.pkgs.click
           python.pkgs.pynput
           python.pkgs.xlib
+ 	  python.pkgs.platformdirs
 
           pkgs.libevdev
           pkgs.libxkbcommon
