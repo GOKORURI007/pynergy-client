@@ -110,7 +110,7 @@ class MsgBase:
                                 f'变长字符串数据不完整：声明长度={length}, 可用数据={len(data) - offset}'
                             )
 
-                        val = data[offset: offset + length].decode()
+                        val = data[offset : offset + length].decode()
                         args.append(val)
                         offset += length
                         logger.debug(f"解包变长字符串: 长度={length}, 值='{val}', 新偏移={offset}")
