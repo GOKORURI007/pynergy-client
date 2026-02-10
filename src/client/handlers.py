@@ -226,7 +226,10 @@ class PynergyHandler:
 
     def on_qinf(self, msg: MsgBase):
         logger.debug(f'Handle {msg}，发送 DINF')
-        self.client.internal_x, self.client.internal_y = get_mouse_position()
+        try:
+            self.client.internal_x, self.client.internal_y = get_mouse_position()
+        except Exception as e:
+            logger.warning(f'Failed to get mouse position: {e}')
         dinf_msg = DInfoMsg(
             0,
             0,

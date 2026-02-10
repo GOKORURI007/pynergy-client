@@ -96,6 +96,10 @@ def get_mouse_position() -> tuple[int, int] | None:
     Returns: (x, y) 元组，失败返回 None
     """
     session_type = os.environ.get('XDG_SESSION_TYPE', '').lower()
+    if not session_type:
+        logger.warning('无法获取当前系统环境 XDG_SESSION_TYPE')
+        return None
+
     # --- 1. 处理 X11 环境 ---
     if session_type == 'x11':
         try:
@@ -106,7 +110,7 @@ def get_mouse_position() -> tuple[int, int] | None:
             pointer = root.query_pointer()
             return pointer.root_x, pointer.root_y
         except Exception as e:
-            print(f'X11 获取失败: {e}')
+            logger.warning(f'X11 获取失败: {e}')
 
     # --- 2. 处理 Wayland 环境 ---
     # Wayland 没有统一 API，需根据不同的合成器 (Compositor) 分别处理
@@ -119,7 +123,7 @@ def get_mouse_position() -> tuple[int, int] | None:
                 x, y = map(int, out.strip().split(','))
                 return x, y
             except Exception as e:
-                print(f'Hyprland 获取失败: {e}')
+                logger.warning(f'Hyprland 获取失败: {e}')
 
         # B. KDE Plasma (Wayland)
         if shutil.which('qdbus'):
@@ -132,11 +136,11 @@ def get_mouse_position() -> tuple[int, int] | None:
                 parts = out.strip().replace('QPoint(', '').replace(')', '').split(',')
                 return int(parts[0]), int(parts[1])
             except Exception as e:
-                print(f'KDE Plasma 获取失败: {e}')
+                logger.warning(f'KDE Plasma 获取失败: {e}')
 
         # C. GNOME (Wayland) - 极难获取
         # GNOME 出于安全考虑彻底封死了非插件获取坐标的路径
         # 除非通过特定的开发者工具或正在运行的录屏会话
-        print('警告: GNOME Wayland 环境下获取全局坐标受限')
+        logger.warning('警告: GNOME Wayland 环境下获取全局坐标受限')
 
     return None
