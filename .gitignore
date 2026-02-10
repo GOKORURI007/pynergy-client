@@ -4,6 +4,6 @@
 .venv/
 .idea/
 .direnv/
-
+result
 **/*.log
 **/.coverage

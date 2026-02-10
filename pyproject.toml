@@ -24,6 +24,20 @@ dev = [
     "semver>=3.0.4",
 ]
 
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = { }
+
+[project.scripts]
+# 格式：可执行文件名 = "包名.模块名:函数名"
+pynergy-client = "src.__main__:main"
+
+[tool.uv]
+package = false
+
 [tool.ruff]
 preview = true
 fix-only = true
