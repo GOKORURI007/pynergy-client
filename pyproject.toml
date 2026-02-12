@@ -1,6 +1,6 @@
 [project]
 name = "pynergy-client"
-version = "0.0.7"
+version = "0.0.8"
 description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
