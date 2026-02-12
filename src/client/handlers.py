@@ -1,3 +1,4 @@
+import time
 from functools import wraps
 
 from evdev import ecodes
@@ -263,8 +264,15 @@ class PynergyHandler:
 class MessageDispatcher:
     def __init__(self, handler: PynergyHandler):
         self.handler = handler
+        self.last_move_time = 0
+        self.throttle_interval = 0.016  # 约 60fps 的采样率
 
     def dispatch(self, msg: MsgBase):
+        if msg.CODE == 'MOUSE_MOVE':
+            now = time.perf_counter()
+            if now - self.last_move_time < self.throttle_interval:
+                return  # 直接丢弃高频冗余信号
+            self.last_move_time = now
         # 根据类名动态寻找 handle_ 方法
         handler_name = f'on_{msg.CODE.lower()}'
         handler: HandlerMethod = getattr(self.handler, handler_name, self.handler.default_handler)
