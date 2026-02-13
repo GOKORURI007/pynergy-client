@@ -1,3 +1,5 @@
+import os
+import socket
 import sys
 from pathlib import Path
 from typing import Tuple
@@ -124,3 +126,16 @@ def init_backend(
     logger.info(f'Using {keyboard.__class__.__name__} keyboard backend')
 
     return device_ctx, mouse, keyboard
+
+
+his = os.environ.get('HYPRLAND_INSTANCE_SIGNATURE')
+runtime_dir = os.environ.get('XDG_RUNTIME_DIR')
+addr = f'{runtime_dir}/hypr/{his}/.socket.sock'
+
+
+def get_mouse_position_hyperland():
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+        s.connect(addr)
+        s.sendall(b'cursorpos')
+        response = s.recv(1024).decode()  # 得到 "x, y"
+        return response

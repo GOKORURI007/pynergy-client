@@ -66,6 +66,7 @@ class PynergyHandler:
 
         self.last_mouse_time = 0
         self.interval = 0.008  # 约 125Hz，可以平衡平滑度和性能
+        self.move_count = 0
         self._pending_pos = None
 
     @staticmethod
@@ -165,7 +166,7 @@ class PynergyHandler:
         button = msg.button
         self.mouse.send_button(hid_to_ecode(synergy_to_hid((button << 8) + 0xAA)), True)
 
-    @device_check
+    # @device_check
     async def on_dmmv(self, msg: DMouseMoveMsg, client: 'PynergyClient'):
         logger.debug(f'Handle {msg}')
         now = time.perf_counter()
@@ -173,13 +174,20 @@ class PynergyHandler:
         if now - self.last_mouse_time < self.interval:
             # self._pending_pos = (msg.x, msg.y)
             return
-
+        self.move_count += 1
+        if self.move_count >= 2:
+            self.mouse.move_absolute(msg.x, msg.y)
+            self.mouse.syn()
+            self.move_count = 0
+            return
         if client.abs_mouse_move:
             self.mouse.move_absolute(msg.x, msg.y)
+            self.mouse.syn()
         else:
             dx, dy = self.ctx.calculate_relative_move(msg.x, msg.y)
             if dx != 0 or dy != 0:
                 self.mouse.move_relative(dx, dy)
+                self.mouse.syn()
 
     @device_check
     async def on_dmrm(self, msg: DMouseRelMoveMsg, client: 'PynergyClient'):
