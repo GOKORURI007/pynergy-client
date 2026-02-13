@@ -94,11 +94,11 @@ dependencies = ["loguru"]
 在 `uv` Workspace 下，由于每个包都有独立的 `src` 布局，你在 Client 中调用时，Logger 的管理会变得非常清晰：
 
 ```python
-# protocol/src/pynergy_protocol/core.py
+# pynergy_protocol/src/pynergy_protocol/core.py
 from loguru import logger
 
 # 子包内部定义的 logger 会带有自己的 context
-log = logger.bind(name="protocol")
+log = logger.bind(name="pynergy_protocol")
 
 # src/pynergy_client/main.py
 from pynergy_protocol.core import log as proto_log
@@ -109,7 +109,7 @@ client_log = logger.bind(name="client")
 
 def run():
     client_log.info("Client 启动")
-    proto_log.info("正在解析协议")  # 这条日志会自动带有 protocol 标识
+    proto_log.info("正在解析协议")  # 这条日志会自动带有 pynergy_protocol 标识
 
 ```
 

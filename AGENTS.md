@@ -142,7 +142,7 @@ def main(server: str, port: int, coords_mode: str):
 
 ```python
 def run(self):
-    self.connect()
+    self._connect()
     while self._running:
         msg = self._protocol.recv_message(self.sock)
         msg_type, params = self._protocol.parse_message(msg)

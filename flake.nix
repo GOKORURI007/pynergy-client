@@ -1,6 +1,6 @@
 {
   description = ''
-    A python client for synergy protocol. Compatible with Deskflow.
+    A python client for synergy pynergy_protocol. Compatible with Deskflow.
   '';
 
   inputs = {

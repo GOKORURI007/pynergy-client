@@ -19,19 +19,19 @@ class HelloMsg(MsgBase):
     """hello message
 
     This is the first message sent by the server after a client connects.
-    The client uses this to determine protocol compatibility.
+    The client uses this to determine pynergy_protocol compatibility.
 
     Attributes:
         protocol_name: Protocol name (7 bytes, fixed-size) - A fixed-size field for
-        the protocol identifier, used for backward compatibility. The supported values are
-        "Synergy" or "Barrier". "Barrier" is the default protocol name, while "Synergy" is used
+        the pynergy_protocol identifier, used for backward compatibility. The supported values are
+        "Synergy" or "Barrier". "Barrier" is the default pynergy_protocol name, while "Synergy" is used
         only for backwards compatibility. This is an exception to the standard length-prefixed
         string format.
         major: Server major version number (2 bytes)
         minor: Server minor version number (2 bytes)
 
     Examples:
-        Barrier protocol, version 1.8
+        Barrier pynergy_protocol, version 1.8
         "Barrier\x00\x01\x00\x08"
     """
 
@@ -53,7 +53,7 @@ class HelloMsg(MsgBase):
 class HelloBackMsg(MsgBase):
     """Client hello response message
     Attributes:
-        protocol_name: Protocol name (7 bytes, fixed-size) - A fixed-size field for the protocol identifier, which must match the server's. The supported values are "Synergy" or "Barrier". "Barrier" is the default protocol name, while "Synergy" is used only for backwards compatibility. This is an exception to the standard length-prefixed string format.
+        protocol_name: Protocol name (7 bytes, fixed-size) - A fixed-size field for the pynergy_protocol identifier, which must match the server's. The supported values are "Synergy" or "Barrier". "Barrier" is the default pynergy_protocol name, while "Synergy" is used only for backwards compatibility. This is an exception to the standard length-prefixed string format.
         major: Client major version number (2 bytes)
         minor: Client minor version number (2 bytes)
         name: Client name (string) - A standard length-prefixed string.
@@ -365,12 +365,12 @@ class DMouseRelMoveMsg(MsgBase):
         - When absolute positioning is not desired
 
     Attributes:
-        x_delta: X delta (2 bytes, signed) - Horizontal movement
-        y_delta: Y delta (2 bytes, signed) - Vertical movement
+        dx: X delta (2 bytes, signed) - Horizontal movement
+        dy: Y delta (2 bytes, signed) - Vertical movement
     """
 
-    x_delta: Int16
-    y_delta: Int16
+    dx: Int16
+    dy: Int16
 
 
 @Registry.register(MsgID.DMUP)
@@ -642,14 +642,14 @@ class QInfoMsg(MsgBase):
 class EBadMsg(MsgBase):
     """Protocol violation
 
-    Sent when the client violates the protocol in some way. This can include:
+    Sent when the client violates the pynergy_protocol in some way. This can include:
         - Sending malformed messages
         - Sending messages in wrong order
         - Sending unexpected message types
-        - Exceeding protocol limits
+        - Exceeding pynergy_protocol limits
 
     After sending this message, the server will immediately disconnect the client.
-    This indicates a serious protocol error that cannot be recovered from.
+    This indicates a serious pynergy_protocol error that cannot be recovered from.
 
     Common Causes:
         - Implementation bugs in client
@@ -677,9 +677,9 @@ class EBusyMsg(MsgBase):
 @Registry.register(MsgID.EICV)
 @dataclass(slots=True)
 class EIncompatibleMsg(MsgBase):
-    """Incompatible protocol versions
+    """Incompatible pynergy_protocol versions
 
-    Sent when the client and server have incompatible protocol versions.
+    Sent when the client and server have incompatible pynergy_protocol versions.
     This typically occurs when:
         - Major versions differ (fundamental incompatibility)
         - Server requires newer features than client supports

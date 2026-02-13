@@ -78,6 +78,6 @@ class MsgID(str, Enum):
     EBSY = 'EBSY'
     """Client name already in use"""
     EICV = 'EICV'
-    """Incompatible protocol versions"""
+    """Incompatible pynergy_protocol versions"""
     EUNK = 'EUNK'
     """Unknown client name"""

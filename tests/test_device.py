@@ -7,7 +7,6 @@
 from unittest.mock import MagicMock, patch
 
 from evdev import ecodes
-
 from pynergy_client.device import VirtualDevice
 
 

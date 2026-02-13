@@ -158,7 +158,7 @@ class MySynergyClient:
         self.is_ready = False
 
     def start(self):
-        self.conn.connect()
+        self.conn._connect()
         # 发送初始 Hello (握手第一步)
         # self.conn.send_msg(HelloMsg(...))
 
