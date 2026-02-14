@@ -133,7 +133,7 @@ runtime_dir = os.environ.get('XDG_RUNTIME_DIR')
 addr = f'{runtime_dir}/hypr/{his}/.socket.sock'
 
 
-def get_mouse_position_hyperland():
+def get_mouse_position_hyprland():
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
         s.connect(addr)
         s.sendall(b'cursorpos')

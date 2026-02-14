@@ -81,3 +81,18 @@ class MsgID(str, Enum):
     """Incompatible pynergy_protocol versions"""
     EUNK = 'EUNK'
     """Unknown client name"""
+
+
+class ModifierKeyMask(int, Enum):
+    """Modifier key mask"""
+
+    Shift = 0x0001
+    Control = 0x0002
+    Alt = 0x0004
+    Meta = 0x0008
+    Super = 0x0010
+    AltGr = 0x0020
+    Level5Lock = 0x0040
+    CapsLock = 0x1000
+    NumLock = 0x2000
+    ScrollLock = 0x4000

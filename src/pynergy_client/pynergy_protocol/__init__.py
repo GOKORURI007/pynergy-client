@@ -34,7 +34,7 @@ from .messages import (
     QInfoMsg,
 )
 from .parser import PynergyParser
-from .protocol_types import MsgID
+from .protocol_types import ModifierKeyMask, MsgID
 from .struct_types import (
     Double,
     DoubleComplex,
@@ -60,7 +60,7 @@ from .struct_types import (
     XPad,
 )
 
-_core_exports = [Registry, MsgBase, PynergyParser, MsgID]
+_core_exports = [Registry, MsgBase, PynergyParser, MsgID, ModifierKeyMask]
 
 # 自动收集所有消息类（继承自 MsgBase）
 _message_classes = [
@@ -129,6 +129,7 @@ __all__ = [
     'MsgBase',
     'PynergyParser',
     'MsgID',
+    'ModifierKeyMask',
     # Message
     'HelloMsg',
     'HelloBackMsg',

@@ -104,9 +104,9 @@ class PynergyHandler:
         self.mouse.move_absolute(msg.entry_x, msg.entry_y)
         self.ctx.logical_pos = (msg.entry_x, msg.entry_y)
         client.state = ClientState.ACTIVE
-        # TODO
-        # modifiers = msg.mod_key_mask
-        # client.sync_modifiers(modifiers)
+
+        modifiers = msg.mod_key_mask
+        self.keyboard.sync_modifiers(modifiers)
 
     @staticmethod
     async def on_ciak(msg: MsgBase, client=None):
@@ -172,7 +172,7 @@ class PynergyHandler:
 
     # @device_check
     async def on_dmmv(self, msg: DMouseMoveMsg, client: 'PynergyClient'):
-        logger.debug(f'Handle {msg}')
+        logger.trace(f'Handle {msg}')
         now = time.perf_counter()
 
         if now - self.last_mouse_time < self.interval:
@@ -197,7 +197,7 @@ class PynergyHandler:
 
     @device_check
     async def on_dmrm(self, msg: DMouseRelMoveMsg, client: 'PynergyClient'):
-        logger.debug(f'Handle {msg}')
+        logger.trace(f'Handle {msg}')
         self.mouse.move_relative(msg.dx, msg.dy)
 
     @device_check
@@ -208,7 +208,7 @@ class PynergyHandler:
 
     @device_check
     async def on_dmwm(self, msg: DMouseWheelMsg, client: 'PynergyClient'):
-        logger.debug(f'Handle {msg}')
+        logger.trace(f'Handle {msg}')
 
         x, y = msg.x_delta, msg.y_delta
         if y != 0:

@@ -47,6 +47,3 @@ class X11DeviceContext(BaseDeviceContext):
             return pointer.root_x, pointer.root_y
         except Exception as e:
             logger.warning(f'X11 获取失败: {e}')
-
-    def sync_logical_to_real(self):
-        self.logical_pos = self.get_real_cursor_pos()

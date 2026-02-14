@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Tuple
 
+from loguru import logger
+
 
 @dataclass
 class PlatformInfo:
@@ -52,7 +54,7 @@ class BaseDeviceContext(ABC):
 
         # 3. 更新理论位置 (重要：这是为了下次计算)
         self.logical_pos = (clamped_x, clamped_y)
-        print(f'Logical pos: {self.logical_pos}')
+        logger.trace(f'Logical pos: {self.logical_pos}')
         return dx, dy
 
 
@@ -77,7 +79,8 @@ class BaseVirtualDevice(ABC):
 
 
 class BaseMouseVirtualDevice(BaseVirtualDevice):
-    pressed_btns: set[int] = set()
+    def __init__(self):
+        self.pressed_btns: set[int] = set()
 
     @abstractmethod
     def move_absolute(self, x: int, y: int) -> None:
@@ -111,7 +114,9 @@ class BaseMouseVirtualDevice(BaseVirtualDevice):
 
 
 class BaseKeyboardVirtualDevice(BaseVirtualDevice):
-    pressed_keys: set[int] = set()
+    def __init__(self):
+        self.pressed_keys: set[int] = set()
+        self.current_modifiers: int = 0
 
     @abstractmethod
     def send_key(self, key_code: int, down: bool) -> None:
@@ -121,4 +126,9 @@ class BaseKeyboardVirtualDevice(BaseVirtualDevice):
     @abstractmethod
     def release_all_key(self) -> None:
         """"""
+        pass
+
+    @abstractmethod
+    def sync_modifiers(self, modifiers: int) -> None:
+        """同步修饰键状态"""
         pass

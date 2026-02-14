@@ -121,6 +121,3 @@ class WaylandDeviceContext(BaseDeviceContext):
             return self.screen_size[0] // 2, self.screen_size[1] // 2
 
         return None
-
-    def sync_logical_to_real(self):
-        self.logical_pos = self.get_real_cursor_pos()

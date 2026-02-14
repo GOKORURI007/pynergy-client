@@ -3,7 +3,9 @@ from typing import Tuple
 import evdev
 from evdev import AbsInfo
 from evdev import ecodes as e
+from loguru import logger
 
+from ..pynergy_protocol import ModifierKeyMask
 from .base import BaseKeyboardVirtualDevice, BaseMouseVirtualDevice
 
 
@@ -24,6 +26,7 @@ class UInputMouseDevice(BaseMouseVirtualDevice):
             product: 产品 ID
             version: 版本号
         """
+        super().__init__()
         capabilities = {
             e.EV_KEY: [
                 e.BTN_LEFT,
@@ -56,8 +59,6 @@ class UInputMouseDevice(BaseMouseVirtualDevice):
             version=version,
         )
 
-        self.pressed_btns: set[int] = set()
-
     def move_absolute(self, x: int, y: int) -> None:
         self._ui.write(e.EV_ABS, e.ABS_X, x)
         self._ui.write(e.EV_ABS, e.ABS_Y, y)
@@ -80,7 +81,7 @@ class UInputMouseDevice(BaseMouseVirtualDevice):
             self.pressed_btns.add(button_id)
             value = 1
         else:
-            self.pressed_btns.remove(button_id)
+            self.pressed_btns.discard(button_id)
             value = 0
         self._ui.write(e.EV_KEY, button_id, value)
 
@@ -111,8 +112,10 @@ class UInputKeyboardDevice(BaseKeyboardVirtualDevice):
             product: 产品 ID
             version: 版本号
         """
+        super().__init__()
         capabilities = {
             e.EV_KEY: range(1, 256),
+            e.EV_LED: [e.LED_CAPSL, e.LED_NUML, e.LED_SCROLLL],  # 声明 LED 灯
         }
         self._ui = evdev.UInput(
             events=capabilities,  # type: ignore[arg-type]
@@ -122,14 +125,12 @@ class UInputKeyboardDevice(BaseKeyboardVirtualDevice):
             version=version,
         )
 
-        self.pressed_keys = set()
-
     def send_key(self, key_code: int, down: bool) -> None:
         if down:
             self.pressed_keys.add(key_code)
             value = 1
         else:
-            self.pressed_keys.remove(key_code)
+            self.pressed_keys.discard(key_code)
             value = 0
 
         self._ui.write(e.EV_KEY, key_code, value)
@@ -138,8 +139,81 @@ class UInputKeyboardDevice(BaseKeyboardVirtualDevice):
         for key_code in self.pressed_keys:
             self.send_key(key_code, False)
 
+    def sync_modifiers(self, modifiers: int) -> None:
+        """同步修饰键状态，使用 sysfs 规避 uinput 阻塞问题"""
+
+        # 1. 定义 Lock 键映射 (Mask, Sysfs 名称, 按键 Ecode)
+        lock_keys = [
+            (ModifierKeyMask.CapsLock, 'capslock', e.KEY_CAPSLOCK),
+            (ModifierKeyMask.NumLock, 'numlock', e.KEY_NUMLOCK),
+            (ModifierKeyMask.ScrollLock, 'scrolllock', e.KEY_SCROLLLOCK),
+        ]
+
+        for mask, sysfs_name, key_code in lock_keys:
+            target_state = bool(modifiers & mask)
+            # 通过 sysfs 获取物理 / 系统真实的锁定状态
+            local_state = get_led_state_sysfs(sysfs_name)
+
+            if target_state != local_state:
+                logger.debug(
+                    f'[Modifier] {sysfs_name} 状态不一致: '
+                    f'Remote={target_state}, Local={local_state}. 发送翻转按键.'
+                )
+                # 模拟敲击以同步状态
+                self.send_key(key_code, True)
+                self.send_key(key_code, False)
+            else:
+                # 只有在调试高频问题时才开启这一行，否则日志会很多
+                # logger.debug(f"[Modifier] {sysfs_name} 已同步: {local_state}")
+                pass
+
+        # 2. 处理普通修饰键 is this neccasry?
+        normal_mods = [
+            (ModifierKeyMask.Shift, e.KEY_LEFTSHIFT),
+            (ModifierKeyMask.Control, e.KEY_LEFTCTRL),
+            (ModifierKeyMask.Alt, e.KEY_LEFTALT),
+            (ModifierKeyMask.AltGr, e.KEY_RIGHTALT),
+            (ModifierKeyMask.Meta, e.KEY_LEFTMETA),
+            (ModifierKeyMask.Super, e.KEY_LEFTMETA),
+            (ModifierKeyMask.Level5Lock, e.KEY_RIGHTCTRL),
+        ]
+
+        changed = self.current_modifiers ^ modifiers
+        if changed:
+            for mask, key_code in normal_mods:
+                if changed & mask:
+                    is_pressed = bool(modifiers & mask)
+                    logger.debug(
+                        f'[Modifier] 普通键位变化: {mask.name} -> '
+                        f'{"Press" if is_pressed else "Release"} (code={key_code})'
+                    )
+                    self.send_key(key_code, is_pressed)
+
+        # 3. 更新当前记录的状态
+        self.current_modifiers = modifiers
+
     def syn(self) -> None:
         self._ui.syn()
 
     def close(self) -> None:
         self._ui.close()
+
+
+def get_led_state_sysfs(led_name: str) -> bool:
+    """
+    led_name 可能是: 'input3::capslock' 或 '*::capslock'
+    NixOS 下路径通常在 /sys/class/leds/
+    """
+    import glob
+
+    # 匹配所有注册为 capslock 的 LED
+    paths = glob.glob(f'/sys/class/leds/*::{led_name}/brightness')
+    for path in paths:
+        try:
+            with open(path, 'r') as f:
+                if f.read().strip() != '0':
+                    return True
+        except Exception as e:
+            logger.warning(f'Error reading LED state: {e}')
+            continue
+    return False
