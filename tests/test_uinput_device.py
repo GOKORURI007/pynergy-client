@@ -4,7 +4,6 @@
 测试 VirtualDevice 类的功能。
 """
 
-from turtle import down
 from unittest.mock import MagicMock, patch
 
 from evdev import ecodes

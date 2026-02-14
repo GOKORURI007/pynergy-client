@@ -76,17 +76,17 @@ class PynergyHandler:
     @staticmethod
     async def on_hello(msg: MsgBase, client=None):
         logger.debug(f'Handle {msg}')
-        logger.warning('This handler is unimplement')
+        logger.warning(f'Handler {msg.CODE} is unimplement')
 
     @staticmethod
     async def on_helloback(msg: MsgBase, client=None):
         logger.debug(f'Handle {msg}')
-        logger.warning('This handler is unimplement')
+        logger.warning(f'Handler {msg.CODE} is unimplement')
 
     @staticmethod
     async def on_cclp(msg: MsgBase, client=None):
         logger.debug(f'Handle {msg}')
-        logger.warning('This handler is unimplement')
+        logger.warning(f'Handler {msg.CODE} is unimplement')
 
     @staticmethod
     async def on_cbye(msg: MsgBase, client: 'PynergyClient'):
@@ -122,17 +122,17 @@ class PynergyHandler:
     @staticmethod
     async def on_cnop(msg: MsgBase, client=None):
         logger.debug(f'Handle {msg}')
-        logger.warning('This handler is unimplement')
+        logger.warning(f'Handler {msg.CODE} is unimplement')
 
     @staticmethod
     async def on_crop(msg: MsgBase, client=None):
         logger.debug(f'Handle {msg}')
-        logger.warning('This handler is unimplement')
+        logger.warning(f'Handler {msg.CODE} is unimplement')
 
     @staticmethod
     async def on_csec(msg: MsgBase, client=None):
         logger.debug(f'Handle {msg}')
-        logger.warning('This handler is unimplement')
+        logger.warning(f'Handler {msg.CODE} is unimplement')
 
     @device_check
     async def on_dkdn(self, msg: DKeyDownMsg, client: 'PynergyClient'):
@@ -222,17 +222,17 @@ class PynergyHandler:
     @staticmethod
     async def on_dsop(msg: MsgBase, client=None):
         logger.debug(f'Handle {msg}')
-        logger.warning('This handler is unimplement')
+        logger.warning(f'Handler {msg.CODE} is unimplement')
 
     @staticmethod
     async def on_ddrg(msg: MsgBase, client=None):
         logger.debug(f'Handle {msg}')
-        logger.warning('This handler is unimplement')
+        logger.warning(f'Handler {msg.CODE} is unimplement')
 
     @staticmethod
     async def on_dftr(msg: MsgBase, client=None):
         logger.debug(f'Handle {msg}')
-        logger.warning('This handler is unimplement')
+        logger.warning(f'Handler {msg.CODE} is unimplement')
 
     @staticmethod
     async def on_lsyn(msg: DLanguageSynchronisationMsg, client=None):
