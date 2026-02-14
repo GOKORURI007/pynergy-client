@@ -9,11 +9,16 @@ import semver
 from git import Repo
 
 # --- 配置区 ---
+RELEASE_BRANCH = 'master'
 PROJECT_ROOT = Path(__file__).parent.parent
 VERSION_FILE = PROJECT_ROOT / 'pyproject.toml'
 
 EXTRA_VERSION_FILES: list[tuple[Path, str, int]] = [
-    (PROJECT_ROOT / 'flake.nix', r'version\s*=\s*["\']([^"\']+)["\']', 1),
+    # 模式解释：
+    # \g<1>: (version\s*=\s*["\']) -> 匹配 version = " 部分
+    # [^"\']+ -> 匹配旧版本号（不捕获，直接被 new_version 替换）
+    # \g<2>: (["\']) -> 匹配结尾的引号部分
+    (PROJECT_ROOT / 'flake.nix', r'(version\s*=\s*["\'])[^"\']+(["\'])', 1),
 ]
 
 # --------------
@@ -65,16 +70,18 @@ def update_extra_version_files(new_version: str) -> None:
 
 
 def main():
-    if Path('.jj').exists:
-        if not questionary.confirm(
-            '你正在一个 jj 仓库中，需要自行确认git head的位置，是否继续？', default=False
-        ).ask():
-            return
     try:
-        repo = Repo('.')
+        repo: Repo = Repo('.')
     except Exception as e:
         print(f'❌ 错误：当前目录不是 Git 仓库: {e}')
         return
+
+    if Path('.jj').exists:
+        if not questionary.confirm(
+            f'你正在一个 jj 仓库中，即将自动checkout{RELEASE_BRANCH}，是否继续？', default=True
+        ).ask():
+            return
+        repo.git.checkout(RELEASE_BRANCH)
 
     if repo.is_dirty():
         print('⚠️ 警告：存在未提交的更改，请先处理后再发布。')
