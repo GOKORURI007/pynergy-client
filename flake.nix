@@ -34,7 +34,7 @@
           python.pkgs.click
           python.pkgs.pynput
           python.pkgs.xlib
- 	  python.pkgs.platformdirs
+          python.pkgs.platformdirs
 
           pkgs.libevdev
           pkgs.libxkbcommon

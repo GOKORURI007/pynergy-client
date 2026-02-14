@@ -9,8 +9,12 @@ import semver
 from git import Repo
 
 # --- 配置区 ---
-VERSION_FILE = Path(__file__).parent.parent / 'pyproject.toml'
+PROJECT_ROOT = Path(__file__).parent.parent
+VERSION_FILE = PROJECT_ROOT / 'pyproject.toml'
 
+EXTRA_VERSION_FILES: list[tuple[Path, str, int]] = [
+    (VERSION_FILE / 'flake.nix', r'version\s*=\s*["\']([^"\']+)["\']', 1),
+]
 
 # --------------
 
@@ -40,7 +44,32 @@ def update_version(new_version: str) -> None:
         f.write(new_content)
 
 
+def update_extra_version_files(new_version: str) -> None:
+    for file, pattern, count in EXTRA_VERSION_FILES:
+        try:
+            with open(file, 'r', encoding='utf-8') as f:
+                content = f.read()
+                new_content = re.sub(
+                    pattern,
+                    rf'\g<1>{new_version}\g<2>',
+                    content,
+                    count=count,  # 只替换第一个匹配到的版本号（通常就是项目版本）
+                )
+
+            with open(file, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+        except FileNotFoundError:
+            print(f'⚠️ 警告：未找到额外的版本文件 {file}')
+        except Exception as e:
+            print(f'⚠️ 警告：无法更新额外的版本文件 {file}: {e}')
+
+
 def main():
+    if Path('.jj').exists:
+        if not questionary.confirm(
+            '你正在一个 jj 仓库中，需要自行确认git head的位置，是否继续？', default=False
+        ).ask():
+            return
     try:
         repo = Repo('.')
     except Exception as e:
@@ -135,7 +164,12 @@ def main():
                 return  # 或者根据你的逻辑选择 raise 异常
         # 更新 version
         update_version(new_v_str)
-        VERSION_FILE.exists() and repo.git.add(VERSION_FILE)
+        update_extra_version_files(new_v_str)
+        if VERSION_FILE.exists():
+            repo.git.add(VERSION_FILE)
+        for file, _, _ in EXTRA_VERSION_FILES:
+            if file.exists():
+                repo.git.add(file)
         repo.index.commit(f'chore: release v{new_v_str}')
         # 创建新 Tag
         repo.create_tag(tag_name, message=f'Release version {new_v_str}')

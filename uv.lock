@@ -203,7 +203,6 @@ dependencies = [
     { name = "platformdirs" },
     { name = "pynput" },
     { name = "python-xlib" },
-    { name = "ruff" },
     { name = "toml" },
 ]
 
@@ -227,7 +226,6 @@ requires-dist = [
     { name = "platformdirs", specifier = ">=4.5.0" },
     { name = "pynput", specifier = ">=1.8.1" },
     { name = "python-xlib", specifier = ">=0.33" },
-    { name = "ruff", specifier = ">=0.15.0" },
     { name = "toml", specifier = ">=0.10.2" },
 ]
 
