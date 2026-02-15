@@ -78,7 +78,7 @@ def main():
 
     if Path('.jj').exists:
         if not questionary.confirm(
-            f'你正在一个 jj 仓库中，即将自动checkout{RELEASE_BRANCH}，是否继续？', default=True
+            f'你正在一个 jj 仓库中，即将自动checkout {RELEASE_BRANCH}，是否继续？', default=True
         ).ask():
             return
         repo.git.checkout(RELEASE_BRANCH)
