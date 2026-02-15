@@ -168,26 +168,26 @@ class UInputKeyboardDevice(BaseKeyboardVirtualDevice):
                 pass
 
         # 2. 处理普通修饰键 is this neccasry?
-        normal_mods = [
-            (ModifierKeyMask.Shift, e.KEY_LEFTSHIFT),
-            (ModifierKeyMask.Control, e.KEY_LEFTCTRL),
-            (ModifierKeyMask.Alt, e.KEY_LEFTALT),
-            (ModifierKeyMask.AltGr, e.KEY_RIGHTALT),
-            (ModifierKeyMask.Meta, e.KEY_LEFTMETA),
-            (ModifierKeyMask.Super, e.KEY_LEFTMETA),
-            (ModifierKeyMask.Level5Lock, e.KEY_RIGHTCTRL),
-        ]
+        # normal_mods = [
+        #     (ModifierKeyMask.Shift, e.KEY_LEFTSHIFT),
+        #     (ModifierKeyMask.Control, e.KEY_LEFTCTRL),
+        #     (ModifierKeyMask.Alt, e.KEY_LEFTALT),
+        #     (ModifierKeyMask.AltGr, e.KEY_RIGHTALT),
+        #     (ModifierKeyMask.Meta, e.KEY_LEFTMETA),
+        #     (ModifierKeyMask.Super, e.KEY_LEFTMETA),
+        #     (ModifierKeyMask.Level5Lock, e.KEY_RIGHTCTRL),
+        # ]
 
-        changed = self.current_modifiers ^ modifiers
-        if changed:
-            for mask, key_code in normal_mods:
-                if changed & mask:
-                    is_pressed = bool(modifiers & mask)
-                    logger.debug(
-                        f'[Modifier] 普通键位变化: {mask.name} -> '
-                        f'{"Press" if is_pressed else "Release"} (code={key_code})'
-                    )
-                    self.send_key(key_code, is_pressed)
+        # changed = self.current_modifiers ^ modifiers
+        # if changed:
+        #     for mask, key_code in normal_mods:
+        #         if changed & mask:
+        #             is_pressed = bool(modifiers & mask)
+        #             logger.debug(
+        #                 f'[Modifier] 普通键位变化: {mask.name} -> '
+        #                 f'{"Press" if is_pressed else "Release"} (code={key_code})'
+        #             )
+        #             self.send_key(key_code, is_pressed)
 
         # 3. 更新当前记录的状态
         self.current_modifiers = modifiers
