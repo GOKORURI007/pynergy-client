@@ -4,13 +4,13 @@ version = "0.1.5"
 description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
-  "click>=8.2.1",
-  "evdev>=1.9.2; sys_platform == 'linux'",
-  "loguru>=0.7.3",
-  "platformdirs>=4.5.0",
-  "pynput>=1.8.1",
-  "python-xlib>=0.33",
-  "toml>=0.10.2",
+    "evdev>=1.9.2; sys_platform == 'linux'",
+    "loguru>=0.7.3",
+    "platformdirs>=4.5.0",
+    "pynput>=1.8.1",
+    "python-xlib>=0.33",
+    "toml>=0.10.2",
+    "typer>=0.23.1",
 ]
 
 [project.scripts]
@@ -18,19 +18,26 @@ pynergy-client = "src.pynergy_client.__main__:main"
 
 [dependency-groups]
 dev = [
-  "gitpython>=3.1.46",
-  "pytest>=9.0.2",
-  "pytest-cov>=7.0.0",
-  "pytest-dependency>=0.6.0",
-  "pytest-sugar>=1.1.1",
-  "questionary>=2.1.1",
-  "ruff>=0.14.14",
-  "semver>=3.0.4",
+    "babel>=2.18.0",
+    "gitpython>=3.1.46",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "pytest-dependency>=0.6.0",
+    "pytest-sugar>=1.1.1",
+    "questionary>=2.1.1",
+    "ruff>=0.14.14",
+    "semver>=3.0.4",
 ]
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = { }
+
+[tool.setuptools.package-data]
+"pynergy_client" = ["locales/**/*.mo"]
 
 [tool.ruff]
 preview = true
@@ -50,9 +57,6 @@ line-ending = "lf"
 [tool.ruff.lint]
 preview = true
 select = ["E4", "E7", "E9", "F", "I"]
-
-[tool.setuptools.packages]
-find = {  }
 
 [tool.uv]
 package = false
