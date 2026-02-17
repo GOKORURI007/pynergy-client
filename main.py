@@ -1,6 +1,4 @@
-import typer
-
-from pynergy_client.app import main
+from pynergy_client.app import app
 
 if __name__ == '__main__':
-    typer.run(main)
+    app()

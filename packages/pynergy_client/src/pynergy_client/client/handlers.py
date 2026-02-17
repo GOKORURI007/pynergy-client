@@ -10,7 +10,6 @@ from ..device import BaseDeviceContext, BaseKeyboardVirtualDevice, BaseMouseVirt
 if TYPE_CHECKING:
     from .client import PynergyClient
 
-from ..keymaps import hid_to_ecode, synergy_to_hid
 from packages.pynergy_protocol.src.pynergy_protocol import (
     CEnterMsg,
     CInfoAckMsg,
@@ -29,6 +28,8 @@ from packages.pynergy_protocol.src.pynergy_protocol import (
     EIncompatibleMsg,
     MsgBase,
 )
+
+from ..keymaps import hid_to_ecode, synergy_to_hid
 from .protocols import ClientState
 
 
@@ -70,7 +71,9 @@ class PynergyHandler:
         self.keyboard = keyboard_device
 
         self.last_mouse_time = 0
-        self.interval = cfg.mouse_move_threshold / 1000  # ~125Hz, can balance smoothness and performance
+        self.interval = (
+            cfg.mouse_move_threshold / 1000
+        )  # ~125Hz, can balance smoothness and performance
         self.mouse_pos_sync_freq = cfg.mouse_pos_sync_freq
         self.move_count = 0
         self._pending_pos = None
@@ -103,8 +106,7 @@ class PynergyHandler:
     async def on_cinn(self, msg: CEnterMsg, client: 'PynergyClient'):
         logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}')
         logger.opt(lazy=True).info(
-            '{log}',
-            log=lambda: f'Entered screen at position: ({msg.entry_x}, {msg.entry_y})'
+            '{log}', log=lambda: f'Entered screen at position: ({msg.entry_x}, {msg.entry_y})'
         )
         self.mouse.move_absolute(msg.entry_x, msg.entry_y)
         self.ctx.logical_pos = (msg.entry_x, msg.entry_y)
@@ -258,7 +260,7 @@ class PynergyHandler:
         try:
             self.ctx.update_screen_info()
             self.ctx.sync_logical_to_real()
-        except Exception as e:
+        except Exception:
             logger.opt(lazy=True).warning('{log}', log=lambda: f'Failed to get mouse position: {e}')
         dinf_msg = DInfoMsg(
             0,
@@ -285,8 +287,9 @@ class PynergyHandler:
     @staticmethod
     async def on_eicv(msg: EIncompatibleMsg, client: 'PynergyClient'):
         logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}')
-        logger.opt(lazy=True).error('{log}',
-                                    log=lambda: f'Version incompatible error: {msg.major}.{msg.minor}')
+        logger.opt(lazy=True).error(
+            '{log}', log=lambda: f'Version incompatible error: {msg.major}.{msg.minor}'
+        )
         await client.stop()
 
     @staticmethod

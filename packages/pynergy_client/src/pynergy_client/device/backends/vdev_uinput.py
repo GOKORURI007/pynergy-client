@@ -157,8 +157,10 @@ class UInputKeyboardDevice(BaseKeyboardVirtualDevice):
             if target_state != local_state:
                 logger.opt(lazy=True).debug(
                     '{log}',
-                    log=lambda:f'[Modifier] {sysfs_name} 状态不一致: '
-                    f'Remote={target_state}, Local={local_state}. 发送翻转按键.'
+                    log=lambda: (
+                        f'[Modifier] {sysfs_name} 状态不一致: '
+                        f'Remote={target_state}, Local={local_state}. 发送翻转按键.'
+                    ),
                 )
                 # 模拟敲击以同步状态
                 self.send_key(key_code, True)
@@ -216,6 +218,8 @@ def get_led_state_sysfs(led_name: str) -> bool:
                     return True
         except Exception as e:
             err_str = str(e)
-            logger.opt(lazy=True).warning('{log}', log=lambda:f'Error reading LED state: {err_str}')
+            logger.opt(lazy=True).warning(
+                '{log}', log=lambda: f'Error reading LED state: {err_str}'
+            )
             continue
     return False

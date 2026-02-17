@@ -10,8 +10,8 @@ import typer
 from click.core import ParameterSource
 from loguru import logger
 from platformdirs import user_config_path, user_log_path
-
 from pynergy_protocol import PynergyParser
+
 from .client.client import PynergyClient
 from .client.dispatcher import MessageDispatcher
 from .client.handlers import PynergyHandler
@@ -29,7 +29,8 @@ def main(
         Path, typer.Option(help=_('Path to the configuration file'))
     ] = user_config_path(appname='pynergy', ensure_exists=True) / 'client-config.json',
     server: Annotated[
-        str | None, typer.Option(help=_('Deskflow/Others server IP address'))] = 'localhost',
+        str | None, typer.Option(help=_('Deskflow/Others server IP address'))
+    ] = 'localhost',
     port: Annotated[int | None, typer.Option(help=_('Port number'))] = 24800,
     client_name: Annotated[str | None, typer.Option(help=_('Client name'))] = platform.node(),
     mouse_backend: Annotated[
@@ -38,15 +39,9 @@ def main(
     keyboard_backend: Annotated[
         Available_Backends | None, typer.Option(help=_('Keyboard backend'))
     ] = None,
-    tls: Annotated[
-        bool | None, typer.Option(help=_('Whether to use tls'))
-    ] = False,
-    mtls: Annotated[
-        bool | None, typer.Option(help=_('Whether to use mtls'))
-    ] = False,
-    tls_trust: Annotated[
-        bool | None, typer.Option(help=_('Whether to trust the server'))
-    ] = False,
+    tls: Annotated[bool | None, typer.Option(help=_('Whether to use tls'))] = False,
+    mtls: Annotated[bool | None, typer.Option(help=_('Whether to use mtls'))] = False,
+    tls_trust: Annotated[bool | None, typer.Option(help=_('Whether to trust the server'))] = False,
     screen_width: Annotated[int | None, typer.Option(help=_('Screen width'))] = None,
     screen_height: Annotated[int | None, typer.Option(help=_('Screen height'))] = None,
     abs_mouse_move: Annotated[
@@ -61,11 +56,13 @@ def main(
     ] = 2,
     logger_name: Annotated[str | None, typer.Option(help=_('Logger name'))] = 'Pynergy',
     log_dir: Annotated[str | None, typer.Option(help=_('Log directory location'))] = user_log_path(
-        appname='pynergy', appauthor=False),
+        appname='pynergy', appauthor=False
+    ),
     log_file: Annotated[str | None, typer.Option(help=_('Log file name'))] = 'pynergy.log',
     log_level_file: Annotated[LogLevel | None, typer.Option(help=_('File log level'))] = 'WARNING',
     log_level_stdout: Annotated[
-        LogLevel | None, typer.Option(help=_('Console log level'))] = 'INFO',
+        LogLevel | None, typer.Option(help=_('Console log level'))
+    ] = 'INFO',
 ):
     """
     Launch the Pynergy client, which supports overriding JSON configurations via command-line arguments.

@@ -30,7 +30,9 @@ class Config:
     # --- Handler ---
     abs_mouse_move: bool = False
     mouse_move_threshold: int = 8  # Unit: ms, approx 125Hz, balances smoothness and performance
-    mouse_pos_sync_freq: int = 2  # Sync frequency, sync actual mouse position with system every n moves
+    mouse_pos_sync_freq: int = (
+        2  # Sync frequency, sync actual mouse position with system every n moves
+    )
 
     tls: bool = False
     mtls: bool = False

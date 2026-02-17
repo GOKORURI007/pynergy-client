@@ -59,26 +59,26 @@ class BaseDeviceContext(ABC):
 
     @staticmethod
     def get_active_screen_resolution_by_kernel():
-        drm_path = "/sys/class/drm"
+        drm_path = '/sys/class/drm'
         # Filter out all interface directories (e.g., card1-DP-1)
-        interfaces = [d for d in os.listdir(drm_path) if "-" in d and d.startswith("card")]
+        interfaces = [d for d in os.listdir(drm_path) if '-' in d and d.startswith('card')]
 
         for interface in interfaces:
             interface_path = os.path.join(drm_path, interface)
 
             # 1. Check connection status
-            status_file = os.path.join(interface_path, "status")
+            status_file = os.path.join(interface_path, 'status')
             if not os.path.exists(status_file):
                 continue
 
-            with open(status_file, "r") as f:
-                if f.read().strip() != "connected":
+            with open(status_file, 'r') as f:
+                if f.read().strip() != 'connected':
                     continue
 
             # 2. Read resolution mode
-            modes_file = os.path.join(interface_path, "modes")
+            modes_file = os.path.join(interface_path, 'modes')
             if os.path.exists(modes_file):
-                with open(modes_file, "r") as f:
+                with open(modes_file, 'r') as f:
                     # The first line is usually the current active resolution, format: "2560x1440"
                     current_mode = f.readline().strip()
                     if current_mode:

@@ -8,14 +8,13 @@ dependencies = [
     "evdev>=1.9.2; sys_platform == 'linux'",
     "loguru>=0.7.3",
     "platformdirs>=4.5.0",
-    "toml>=0.10.2",
-    "typer>=0.23.1",
-    "cryptography>=46.0.5",
+    "typer>=0.21.0",
+    "cryptography>=46.0.3",
     "questionary>=2.1.1",
 ]
 
 [project.scripts]
-pynergy-client = "pynergy_client.__main__:main"
+pynergy-client = "pynergy_client.__main__:app"
 
 [build-system]
 requires = ["hatchling>=1.18"]
@@ -31,26 +30,3 @@ artifacts = [
 
 [tool.uv.sources]
 pynergy-protocol = { workspace = true }
-
-[tool.uv.extra-build-dependencies]
-python-libinput = ["imp"]
-
-
-[tool.ruff]
-preview = true
-fix-only = true
-show-fixes = true
-output-format = "grouped"
-line-length = 100
-src = [".", "inputflow", "tests"]
-
-[tool.ruff.format]
-preview = true
-docstring-code-format = true
-quote-style = "single"
-indent-style = "space"
-line-ending = "lf"
-
-[tool.ruff.lint]
-preview = true
-select = ["E4", "E7", "E9", "F", "I"]

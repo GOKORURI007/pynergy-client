@@ -10,11 +10,16 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from packages.pynergy_protocol.src.pynergy_protocol import HelloBackMsg, HelloMsg, MsgID, \
-    PynergyParser
-from .protocols import ClientProtocol, ClientState, DispatcherProtocol
+from packages.pynergy_protocol.src.pynergy_protocol import (
+    HelloBackMsg,
+    HelloMsg,
+    MsgID,
+    PynergyParser,
+)
+
 from .. import config
 from ..utils import setup_ssl_context, validate_cert
+from .protocols import ClientProtocol, ClientState, DispatcherProtocol
 
 if TYPE_CHECKING:
     from .dispatcher import MessageDispatcher
@@ -34,8 +39,7 @@ class PynergyClient(ClientProtocol):
         parser: PynergyParser,
         dispatcher: 'MessageDispatcher',
     ):
-        """Initialize the client
-        """
+        """Initialize the client"""
         self.cfg = cfg
 
         self.state: ClientState = ClientState.DISCONNECTED
@@ -55,9 +59,7 @@ class PynergyClient(ClientProtocol):
         # 1. Establish async connection
         context = setup_ssl_context(self.cfg)
         self.reader, self.writer = await asyncio.open_connection(
-            self.cfg.server,
-            self.cfg.port,
-            ssl=context
+            self.cfg.server, self.cfg.port, ssl=context
         )
         await validate_cert(self.writer, self.cfg)
         # 2. Wait for server Hello (async read)
@@ -78,7 +80,8 @@ class PynergyClient(ClientProtocol):
 
         self.state = ClientState.CONNECTED
         logger.success(
-            f'Connected to Server {msg.protocol_name} {msg.major}.{msg.minor} successfully')
+            f'Connected to Server {msg.protocol_name} {msg.major}.{msg.minor} successfully'
+        )
 
     async def run(self) -> None:
         """Run the main event loop"""

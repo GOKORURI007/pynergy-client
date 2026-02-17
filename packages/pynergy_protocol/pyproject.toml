@@ -13,22 +13,3 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pynergy_protocol"]
-
-[tool.ruff]
-preview = true
-fix-only = true
-show-fixes = true
-output-format = "grouped"
-line-length = 100
-src = [".", "inputflow", "tests"]
-
-[tool.ruff.format]
-preview = true
-docstring-code-format = true
-quote-style = "single"
-indent-style = "space"
-line-ending = "lf"
-
-[tool.ruff.lint]
-preview = true
-select = ["E4", "E7", "E9", "F", "I"]

@@ -1,11 +1,11 @@
 # Pynergy
 
-![GitHub License](https://img.shields.io/github/license/GOKORURI007/sync-clipboard?link=https%3A%2F%2Fgithub.com%2FGOKORURI007%2Fsync-clipboard%2Fblob%2Fmaster%2FLICENSE)
+![GitHub License](https://img.shields.io/github/license/GOKORURI007/sync-clipboard?link=https%3A%2F%2Fgithub.com%2FGOKORURI007%2Fpynergy%2Fblob%2Fmaster%2FLICENSE)
 ![Python Version](https://img.shields.io/badge/python-3.13%2B-blue)
 
 [English](../README.md) | [简体中文](./README-zhCN.md)
 
-Pynergy 是一个基于 Synergy 协议的键鼠共享客户端，理论上兼容所有基于 Synergy 协议的同类软件 (如
+Pynergy 是一个基于 Synergy 协议的键鼠共享客户端，理论上兼容所有基于 Synergy 协议的同类软件 ( 如
 Deskflow)。
 其源于大量 Wayland Compositor 没有实现 RemoteDesktop portal，导致无法使用 Deskflow 共享键鼠。
 
@@ -13,96 +13,140 @@ Deskflow)。
 
 - 服务端 (不可用，服务端推荐使用 Deskflow)
 - 客户端
-    - [] x11 ( 不可用，推荐使用 Deskflow)
-    - [x] hyperland
-    - [] niri
-    - [x] sway
-    - [x] river
+    - [x] remote control
+    - [x] tsl
+    - [ ] clipboard sharing (
+      可同时使用其他软件，如 [sync-clipboard](https://github.com/GOKORURI007/sync-clipboard)
+    - [ ] file transfer
 
-## 使用方法
+## 安装
 
-
-
-### 方法 1：使用 GitHub 模板（推荐）
-
-1. 点击仓库顶部的 **“使用此模板”**（Use this template）按钮
-2. 选择 **“创建新仓库”**（Create a new repository）
-3. 输入您的新仓库名称和描述
-4. 选择是否公开或私有
-5. 点击 **“创建仓库”**
-
-### 方法 2：克隆并修改
+### 1. 从源码安装
 
 ```bash
-# 克隆此仓库
-git clone https://github.com/YOUR_USERNAME/PythonProjectTemplate.git
-cd PythonProjectTemplate
-
-# 删除原始 git 历史（可选）
-rm -rf .git
-git init
-
-# 创建您的第一次提交
-git add .
-git commit -m "从模板初始化"
+git clone https://github.com/GOKORURI007/pynergy.git
+cd pynergy
+uv sync --all-packages
 ```
 
-### 方法 3：使用 uv（快速）
+### 2. 从 Release 安装
 
-如果您已安装 [uv](https://github.com/astral-sh/uv)：
+[Release](https://github.com/GOKORURI007/pynergy/releases)
+
+### 3. NixOS 安装
+
+1. 在 `flake.nix` 中添加 `pynergy` input
 
 ```bash
-# 从此模板创建新项目
-uv init --template PythonProjectTemplate my-new-project
-cd my-new-project
+inputs = {
+    #  ...
+    pynergy-client = {
+      url = "github:GOKORURI007/pynergy";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+}
+```
+
+2. 在 `configuration.nix` 中添加 `pynergy` 包
+
+```bash
+environment.systemPackages = [
+  inputs.pynergy.packages.${stdenv.hostPlatform.system}.default
+];
 ```
 
 ## 快速开始
 
-从此模板创建项目后：
+配置文件默认位于 `~/.config/pynergy/client-config.json`，可通过 `--config` 选项指定配置文件路径。
 
-1. ** 安装依赖 **：
-   ```bash
-   uv sync
-   ```
+示例：
 
-2. ** 运行项目 **：
-   ```bash
-   uv run main.py
-   ```
+```json
+{
+    "server": "localhost",
+    "port": 24800,
+    "client_name": "Pynergy",
+    "screen_width": null,
+    "screen_height": null,
+    "mouse_backend": null,
+    "keyboard_backend": null,
 
-3. ** 运行测试 **：
-   ```bash
-   uv run scripts/run_tests.py
-   ```
+    "abs_mouse_move": false,
+    "mouse_move_threshold": 8,
+    "mouse_pos_sync_freq": 2,
 
-4. ** 格式化代码 **：
-   ```bash
-   uv run scripts/format.py
-   ```
+    "tls": false,
+    "mtls": false,
+    "tls_trust": false,
+    "pem_path": "~/.config/pynergy/pynergy.pem",
 
-5. ** 发布代码 **:
-   ```bash
-   uv run scripts/release.py
-   ```
-
-## 项目结构
-
-```
-.
-├── docs/             # 文档文件
-├── scripts/          # 实用脚本
-│   ├── format.py     # 代码格式化脚本
-│   ├── release.py    # 发布和版本管理脚本
-│   └── run_tests.py  # 测试运行器脚本
-├── main.py           # 主入口
-├── pyproject.toml    # 项目配置
-└── uv.lock           # 依赖锁定文件
+    "logger_name": "Pynergy",
+    "log_dir": "~/.local/state/pynergy/log",
+    "log_file": "pynergy.log",
+    "log_level_file": "WARNING",
+    "log_level_stdout": "INFO"
+}
 ```
 
-## 后续步骤
+### 1. 命令行启动
 
-- 修改 `main.py` 来实现您的项目逻辑
-- 更新 `pyproject.toml` 中的项目信息
-- 使用 `uv add < 包名 >` 添加您的依赖
-- 使用项目特定信息更新此 README
+```bash
+pynergy-client --server 192.168.1.1 --client-name my-client
+```
+
+详细选项：
+
+```bash
+pynergy-client --help
+
+╭─ Options ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --config                                         PATH                                               Path to the configuration file                                            │
+│                                                                                                     [default: /home/yjc/.config/pynergy/client-config.json]                   │
+│ --server                                         TEXT                                               Deskflow/Others server IP address [default: localhost]                    │
+│ --port                                           INTEGER                                            Port number [default: 24800]                                              │
+│ --client-name                                    TEXT                                               Client name [default: sipl-yjc]                                           │
+│ --mouse-backend                                  [uinput]                                           Mouse backend                                                             │
+│ --keyboard-backend                               [uinput]                                           Keyboard backend                                                          │
+│ --tls                     --no-tls                                                                  Whether to use tls [default: no-tls]                                      │
+│ --mtls                    --no-mtls                                                                 Whether to use mtls [default: no-mtls]                                    │
+│ --tls-trust               --no-tls-trust                                                            Whether to trust the server [default: no-tls-trust]                       │
+│ --screen-width                                   INTEGER                                            Screen width                                                              │
+│ --screen-height                                  INTEGER                                            Screen height                                                             │
+│ --abs-mouse-move          --no-abs-mouse-move                                                       Whether to use absolute displacement [default: no-abs-mouse-move]         │
+│ --mouse-move-threshold                           INTEGER                                            Unit: ms, balances smoothness and performance [default: 8]                │
+│ --mouse-pos-sync-freq                            INTEGER                                            Sync frequency, sync with system real position every n moves [default: 2] │
+│ --logger-name                                    TEXT                                               Logger name [default: Pynergy]                                            │
+│ --log-dir                                        TEXT                                               Log directory location [default: /home/yjc/.local/state/pynergy/log]      │
+│ --log-file                                       TEXT                                               Log file name [default: pynergy.log]                                      │
+│ --log-level-file                                 [TRACE|DEBUG|INFO|SUCCESS|WARNING|ERROR|CRITICAL]  File log level [default: WARNING]                                         │
+│ --log-level-stdout                               [TRACE|DEBUG|INFO|SUCCESS|WARNING|ERROR|CRITICAL]  Console log level [default: INFO]                                         │
+│ --help                                                                                              Show this message and exit.                                               │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
+### 2. systemd 启动 (Auto restart)
+
+1. 复制下方设置到 `~/.config/systemd/user/`
+
+```ini
+[Service]
+ExecStart = /path/to/pynergy-client
+Restart = always
+RestartSec = 5
+Type = simple
+
+[Unit]
+After = graphical-session.target
+Description = pynergy-client kvm client
+PartOf = graphical-session.target
+StartLimitBurst = 15
+StartLimitIntervalSec = 120
+```
+
+2. 修改 `ExecStart` 中的 `/path/to/pynergy-client` 为实际的 `pynergy-client` 路径
+
+3. 执行 `systemctl --user enable --now pynergy-client`
+
+
+
+

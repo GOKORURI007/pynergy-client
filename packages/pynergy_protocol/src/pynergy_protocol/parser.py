@@ -47,7 +47,7 @@ class PynergyParser[T: MsgBase]:
             if len(self._buffer) < total_packet_size:
                 logger.opt(lazy=True).trace(
                     '{log}',
-                    log=lambda: f'Wait for more data: {len(self._buffer)}/{total_packet_size}'
+                    log=lambda: f'Wait for more data: {len(self._buffer)}/{total_packet_size}',
                 )
                 return None
 
@@ -61,7 +61,9 @@ class PynergyParser[T: MsgBase]:
                 if not cls:
                     logger.opt(lazy=True).warning(
                         '{log}',
-                        log=lambda: f'Unknown message code: {packet[:4].decode()}, size: {length}. Skipping.'
+                        log=lambda: (
+                            f'Unknown message code: {packet[:4].decode()}, size: {length}. Skipping.'
+                        ),
                     )
                     return None
 
@@ -72,14 +74,14 @@ class PynergyParser[T: MsgBase]:
                 )
                 return msg_obj
 
-            except (struct.error, UnicodeDecodeError, ValueError) as e:
+            except (struct.error, UnicodeDecodeError, ValueError):
                 logger.opt(lazy=True).error(
                     '{log}',
-                    log=lambda: f'Failed to unpack message body (CODE: {packet[:4].decode()}): {e}'
+                    log=lambda: f'Failed to unpack message body (CODE: {packet[:4].decode()}): {e}',
                 )
                 return None
 
-            except Exception as e:
+            except Exception:
                 logger.opt(lazy=True).exception(
                     '{log}', log=lambda: f'Unexpected error during message construction: {e}'
                 )

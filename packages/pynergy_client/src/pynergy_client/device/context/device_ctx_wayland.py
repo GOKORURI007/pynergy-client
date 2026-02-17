@@ -19,10 +19,9 @@ class WaylandDeviceContext(BaseDeviceContext):
                 if mode['current']:
                     self.screen_size = (mode['width'], mode['height'])
                     return
-        except Exception as e:
+        except Exception:
             logger.opt(lazy=True).warning(
-                '{log}',
-                log=lambda: f'Failed to get active screen resolution by wlr-randr: {e}'
+                '{log}', log=lambda: f'Failed to get active screen resolution by wlr-randr: {e}'
             )
 
         try:
@@ -35,10 +34,7 @@ class WaylandDeviceContext(BaseDeviceContext):
                     raise ValueError('Failed to get active screen resolution by kernel')
         except Exception as e:
             err_str = str(e)
-            logger.opt(lazy=True).warning(
-                '{log}',
-                log=lambda: f'{err_str}'
-            )
+            logger.opt(lazy=True).warning('{log}', log=lambda: f'{err_str}')
 
         self.screen_size = (1920, 1080)
         logger.opt(lazy=True).warning(
@@ -56,16 +52,17 @@ class WaylandDeviceContext(BaseDeviceContext):
                     return x, y
                 case _:
                     raise ValueError('Unsupported desktop environment')
-        except Exception as e:
+        except Exception:
             logger.opt(lazy=True).warning(
-                '{log}',
-                log=lambda: f'get cursor pos by hyprctl failed: {e}'
+                '{log}', log=lambda: f'get cursor pos by hyprctl failed: {e}'
             )
 
         # Last attempt: use environment variables or default values
         logger.opt(lazy=True).warning(
             '{log}',
-            log=lambda: 'Warning: Cannot get accurate cursor position in current Wayland environment'
+            log=lambda: (
+                'Warning: Cannot get accurate cursor position in current Wayland environment'
+            ),
         )
         # Return center position as fallback
         if self.screen_size[0] > 0 and self.screen_size[1] > 0:

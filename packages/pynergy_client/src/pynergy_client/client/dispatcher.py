@@ -5,6 +5,7 @@ from typing import Any
 from loguru import logger
 
 from packages.pynergy_protocol.src.pynergy_protocol import MsgID
+
 from .handlers import PynergyHandler
 from .protocols import ClientProtocol, DispatcherProtocol, MessageTask
 
@@ -38,7 +39,9 @@ class MessageDispatcher(DispatcherProtocol):
 
         logger.opt(lazy=True).debug(
             '{log}',
-            log=lambda: f'{self.__class__} loaded {len(mapping)} handler functions: {list(mapping.keys())}'
+            log=lambda: (
+                f'{self.__class__} loaded {len(mapping)} handler functions: {list(mapping.keys())}'
+            ),
         )
         return mapping
 

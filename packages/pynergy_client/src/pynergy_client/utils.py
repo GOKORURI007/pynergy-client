@@ -135,40 +135,44 @@ def generate_self_signed_pem(cfg: config.Config):
 
     # 2. Build certificate information
     subject = issuer = x509.Name([
-        x509.NameAttribute(NameOID.COMMON_NAME, u"Pynergy-Client"),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"OpenSource"),
+        x509.NameAttribute(NameOID.COMMON_NAME, 'Pynergy-Client'),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, 'OpenSource'),
     ])
 
     # 3. Create self-signed certificate
-    cert = x509.CertificateBuilder().subject_name(
-        subject
-    ).issuer_name(
-        issuer
-    ).public_key(
-        key.public_key()
-    ).serial_number(
-        x509.random_serial_number()
-    ).not_valid_before(
-        datetime.datetime.utcnow()
-    ).not_valid_after(
-        # Valid for 1 year
-        datetime.datetime.utcnow() + datetime.timedelta(days=365)
-    ).add_extension(
-        x509.BasicConstraints(ca=False, path_length=None), critical=True,
-    ).sign(key, hashes.SHA256())
+    cert = (
+        x509
+        .CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime.datetime.utcnow())
+        .not_valid_after(
+            # Valid for 1 year
+            datetime.datetime.utcnow() + datetime.timedelta(days=365)
+        )
+        .add_extension(
+            x509.BasicConstraints(ca=False, path_length=None),
+            critical=True,
+        )
+        .sign(key, hashes.SHA256())
+    )
 
     # 4. Write to file (merge private key and certificate into the same PEM)
-    with open(cfg.pem_path, "wb") as f:
+    with open(cfg.pem_path, 'wb') as f:
         # Write private key
-        f.write(key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption(),
-        ))
+        f.write(
+            key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption(),
+            )
+        )
         # Write certificate
         f.write(cert.public_bytes(serialization.Encoding.PEM))
 
-    print(f"Successfully generated certificate file: {cfg.pem_path}")
+    print(f'Successfully generated certificate file: {cfg.pem_path}')
 
 
 def get_or_create_client_cert(cfg: config.Config):
@@ -180,12 +184,12 @@ def get_or_create_client_cert(cfg: config.Config):
 
     # 1. Check if file exists
     if not cfg.pem_path.exists():
-        print(f"[*] Certificate file {cfg.pem_path} does not exist, generating...")
+        print(f'[*] Certificate file {cfg.pem_path} does not exist, generating...')
         should_generate = True
     else:
         # 2. If exists, check if expired
         try:
-            with open(cfg.pem_path, "rb") as f:
+            with open(cfg.pem_path, 'rb') as f:
                 pem_data = f.read()
                 # Load certificate object
                 cert = x509.load_pem_x509_certificate(pem_data, default_backend())
@@ -195,13 +199,16 @@ def get_or_create_client_cert(cfg: config.Config):
                 remaining_time = cert.not_valid_after - datetime.datetime.utcnow()
 
                 if remaining_time.total_seconds() <= 86400:  # Less than 24 hours
-                    print(f"[!] Certificate is about to expire or has expired ({remaining_time.days} days remaining), regenerating...")
+                    print(
+                        f'[!] Certificate is about to expire or has expired ({remaining_time.days} days remaining), regenerating...'
+                    )
                     should_generate = True
                 else:
                     print(
-                        f"[+] Certificate is valid, valid until: {cert.not_valid_after} ({remaining_time.days} days remaining)")
+                        f'[+] Certificate is valid, valid until: {cert.not_valid_after} ({remaining_time.days} days remaining)'
+                    )
         except Exception as e:
-            print(f"[!] Failed to parse certificate: {e}, will attempt to regenerate.")
+            print(f'[!] Failed to parse certificate: {e}, will attempt to regenerate.')
             should_generate = True
 
     # 3. Execute generation logic
@@ -212,7 +219,7 @@ def get_or_create_client_cert(cfg: config.Config):
 
 
 def get_fingerprint(pem_path):
-    with open(pem_path, "rb") as f:
+    with open(pem_path, 'rb') as f:
         data = f.read()
         cert_data = x509.load_pem_x509_certificate(data)
         fingerprint = hashlib.sha256(cert_data.public_bytes(serialization.Encoding.DER)).hexdigest()
@@ -256,25 +263,25 @@ async def validate_cert(writer, cfg: config.Config):
         known_hosts = json.load(f)
 
     if cfg.server not in known_hosts.keys():
-        typer.echo(f"Found new certificate fingerprint: {current_fingerprint}")
-        confirm = await questionary.confirm("Trust and continue? ", default=True).ask_async()
+        typer.echo(f'Found new certificate fingerprint: {current_fingerprint}')
+        confirm = await questionary.confirm('Trust and continue? ', default=True).ask_async()
         if confirm:
             known_hosts[cfg.server] = current_fingerprint
             with open(known_hosts_file, 'w') as f:
                 json.dump(known_hosts, f, indent=2)
         else:
             writer.close()
-            raise Exception("User cancelled trust")
+            raise Exception('User cancelled trust')
 
     elif known_hosts[cfg.server] != current_fingerprint:
-        typer.echo(f"Warning: Server fingerprint changed, potential security risk!")
-        typer.echo(f"Current fingerprint: {current_fingerprint}")
-        typer.echo(f"Known fingerprint: {known_hosts[cfg.server]}")
-        confirm = await questionary.confirm("Trust and continue? ", default=False).ask_async()
+        typer.echo('Warning: Server fingerprint changed, potential security risk!')
+        typer.echo(f'Current fingerprint: {current_fingerprint}')
+        typer.echo(f'Known fingerprint: {known_hosts[cfg.server]}')
+        confirm = await questionary.confirm('Trust and continue? ', default=False).ask_async()
         if confirm:
             known_hosts[cfg.server] = current_fingerprint
             with open(known_hosts_file, 'w') as f:
                 json.dump(known_hosts, f, indent=2)
         else:
             writer.close()
-            raise Exception("Warning: Server fingerprint changed, potential security risk!")
+            raise Exception('Warning: Server fingerprint changed, potential security risk!')
