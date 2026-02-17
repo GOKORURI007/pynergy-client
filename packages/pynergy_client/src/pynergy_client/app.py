@@ -85,18 +85,18 @@ def main(
     try:
         asyncio.run(run_app(cfg))
     except KeyboardInterrupt:
-        typer.echo('\n已停止服务')
+        typer.echo('\nService stopped')
 
 
 async def run_app(cfg: Config):
     init_logger(cfg)
-    logger.info(f'日志记录器已初始化: {cfg.log_dir}/{cfg.log_file}')
+    logger.info(f'Logger initialized: {cfg.log_dir}/{cfg.log_file}')
 
     device_ctx, mouse, keyboard = init_backend(cfg)
     assert device_ctx and mouse and keyboard
     if not cfg.screen_width or not cfg.screen_height:
         device_ctx.update_screen_info()
-        logger.info(f'自动获取屏幕尺寸: {device_ctx.screen_size[0]}x{device_ctx.screen_size[1]}')
+        logger.info(f'Auto-detected screen size: {device_ctx.screen_size[0]}x{device_ctx.screen_size[1]}')
 
     handler = PynergyHandler(cfg, device_ctx, mouse, keyboard)
     dispatcher = MessageDispatcher(handler)
@@ -109,8 +109,8 @@ async def run_app(cfg: Config):
         dispatcher=dispatcher,
     )
 
-    # 1. Start the Worker
-    # It will run all the time, waiting for a message in the queue
+    # 1. Start Worker
+    # It will run all the time, waiting for messages in the queue
     worker_task = asyncio.create_task(dispatcher.worker(0))
 
     # 2. Start Client listening
@@ -121,12 +121,12 @@ async def run_app(cfg: Config):
     except asyncio.CancelledError:
         pass
     except KeyboardInterrupt:
-        logger.info('收到中断信号，正在退出...')
+        logger.info('Received interrupt signal, exiting...')
     except Exception as e:
         raise e
-        logger.error(f'客户端错误: {e}')
+        logger.error(f'Client error: {e}')
         sys.exit(1)
     finally:
-        # 3. Stop all missions
+        # 3. Stop all tasks
         await client.stop()
         worker_task.cancel()

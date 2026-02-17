@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 class ClientState(Enum):
-    """客户端状态枚举"""
+    """Client state enumeration"""
 
     DISCONNECTED = 0
     CONNECTING = 1
@@ -54,7 +54,7 @@ class HandlerMethod(Protocol):
 class MessageTask:
     handler: HandlerMethod
     msg: MsgBase
-    client: ClientProtocol  # 注入 Client 引用，方便回传
+    client: ClientProtocol  # Inject Client reference for easy callback
 
 
 class DispatcherProtocol(Protocol):

@@ -1,5 +1,5 @@
 """
-项目全局配置文件。
+Global project configuration file.
 """
 
 from dataclasses import dataclass
@@ -29,16 +29,16 @@ class Config:
 
     # --- Handler ---
     abs_mouse_move: bool = False
-    mouse_move_threshold: int = 8  # 单位 ms，约 125Hz，可以平衡平滑度和性能
-    mouse_pos_sync_freq: int = 2  # 同步频率，每移动 n 次与系统同步鼠标真实位置
+    mouse_move_threshold: int = 8  # Unit: ms, approx 125Hz, balances smoothness and performance
+    mouse_pos_sync_freq: int = 2  # Sync frequency, sync actual mouse position with system every n moves
 
     # --- Logger ---
     logger_name: str = 'Pynergy'
-    # 日志文件夹
+    # Log directory
     log_dir: Path = user_log_path(appname='pynergy', appauthor=False)
-    # 日志文件名
+    # Log file name
     log_file: str = 'pynergy.log'
-    # 文件输出日志级别
+    # File output log level
     log_level_file: LogLevel = 'WARNING'
-    # 标准输出日志级别
+    # Stdout log level
     log_level_stdout: LogLevel = 'INFO'

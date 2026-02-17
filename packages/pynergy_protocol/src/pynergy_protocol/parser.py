@@ -12,7 +12,7 @@ class PynergyParser[T: MsgBase]:
         self._buffer = bytearray()
 
     def feed(self, data: bytes):
-        """存入收到的原始字节"""
+        """Store received raw bytes"""
         if not data:
             return
         logger.opt(lazy=True).trace('{log}', log=lambda: f'Fed {len(data)} bytes into buffer')
@@ -20,29 +20,29 @@ class PynergyParser[T: MsgBase]:
 
     def _parse_packet(self, get_class_func):
         """
-        私有辅助方法：解析数据包的核心逻辑。
-        :param get_class_func: 获取消息类的函数（用于区分 next_msg 和 next_handshake_msg）
-        :return: 解析成功的消息对象或 None
+        Private helper method: Core logic for parsing packets.
+        :param get_class_func: Function to get message class (for distinguishing next_msg and next_handshake_msg)
+        :return: Parsed message object or None
         """
         total_packet_size = 0
 
-        # 基础长度检查（前 4 字节为包长度）
+        # Basic length check (first 4 bytes are packet length)
         if len(self._buffer) < 4:
             return None
 
         try:
-            # 1. 读取长度前缀
+            # 1. Read length prefix
             length = struct.unpack_from('>I', self._buffer)[0]
 
-            # 协议安全检查：防止恶意超大包导致 OOM
-            if length > 10 * 1024 * 1024:  # 假设最大包 10MB
+            # Protocol security check: Prevent malicious oversized packets from causing OOM
+            if length > 10 * 1024 * 1024:  # Assume max packet size is 10MB
                 logger.opt(lazy=True).error(
                     '{log}', log=lambda: f'Invalid packet length: {length}, clearing buffer'
                 )
                 self._buffer.clear()
                 return None
 
-            # 检查缓冲区数据是否足够
+            # Check if buffer has enough data
             total_packet_size = 4 + length
             if len(self._buffer) < total_packet_size:
                 logger.opt(lazy=True).trace(
@@ -51,11 +51,11 @@ class PynergyParser[T: MsgBase]:
                 )
                 return None
 
-            # 2. 提取数据包（跳过前 4 字节长度）
+            # 2. Extract packet (skip first 4 bytes of length)
             packet = self._buffer[4:total_packet_size]
 
             try:
-                # 3. 调用传入的函数获取消息类
+                # 3. Call passed function to get message class
                 cls = get_class_func(packet)
 
                 if not cls:
@@ -65,7 +65,7 @@ class PynergyParser[T: MsgBase]:
                     )
                     return None
 
-                # 4. 执行反序列化
+                # 4. Perform deserialization
                 msg_obj = cls.unpack(packet)
                 logger.opt(lazy=True).trace(
                     '{log}', log=lambda: f'Successfully parsed message: {msg_obj}'
@@ -86,17 +86,17 @@ class PynergyParser[T: MsgBase]:
                 return None
 
         finally:
-            # 核心原则：无论解析成功与否，只要长度足够，就必须消费掉这段数据
+            # Core principle: Regardless of parsing success, consume this data as long as length is sufficient
             if len(self._buffer) >= total_packet_size:
                 del self._buffer[:total_packet_size]
 
     def next_msg(self) -> T | None:
         """
-        尝试解析并返回一个普通消息对象。
+        Try to parse and return a regular message object.
         """
 
         def get_class(packet):
-            # 从 packet 中提取 msg_code 并查找对应的消息类
+            # Extract msg_code from packet and find corresponding message class
             msg_code = struct.unpack_from('>4s', packet)[0]
             return Registry.get_class(msg_code.decode())
 
@@ -104,11 +104,11 @@ class PynergyParser[T: MsgBase]:
 
     def next_handshake_msg(self, msg_type: Literal[MsgID.Hello, MsgID.HelloBack]) -> T | None:
         """
-        尝试解析并返回一个 Handshake 消息对象。
+        Try to parse and return a Handshake message object.
         """
 
         def get_class(_packet):
-            # 直接根据 msg_type 查找消息类
+            # Find message class directly by msg_type
             return Registry.get_class(msg_type)
 
         return self._parse_packet(get_class)

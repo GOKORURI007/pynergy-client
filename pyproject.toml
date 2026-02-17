@@ -19,9 +19,8 @@ dev = [
 ]
 
 [tool.uv]
-package = false  # Root 是 virtual，不打包
+package = false
 
-# ========== 关键修改：添加 Workspace 配置 ==========
 [tool.uv.workspace]
 members = ["packages/*"]
 

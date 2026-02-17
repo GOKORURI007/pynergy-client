@@ -35,17 +35,17 @@ from .protocols import ClientState
 def device_check(func):
     @wraps(func)
     async def wrapper(self, msg, client):
-        # 1. 状态检查 (这里的 self 指的是调用者，即 Handler 或 Client 的实例)
+        # 1. State check (here self refers to the caller, i.e., Handler or Client instance)
         if client.state != ClientState.ACTIVE:
             logger.opt(lazy=True).warning(
-                '{log}', log=lambda: f'忽略消息 {msg}，当前状态: {client.state}'
+                '{log}', log=lambda: f'Ignored message {msg}, current state: {client.state}'
             )
             return None
 
-        # 2. 执行核心业务逻辑
+        # 2. Execute core business logic
         result = await func(self, msg, client)
 
-        # 3. 统一设备同步
+        # 3. Unified device synchronization
         self.mouse.syn()
         self.keyboard.syn()
 
@@ -70,7 +70,7 @@ class PynergyHandler:
         self.keyboard = keyboard_device
 
         self.last_mouse_time = 0
-        self.interval = cfg.mouse_move_threshold / 1000  # 约 125Hz，可以平衡平滑度和性能
+        self.interval = cfg.mouse_move_threshold / 1000  # ~125Hz, can balance smoothness and performance
         self.mouse_pos_sync_freq = cfg.mouse_pos_sync_freq
         self.move_count = 0
         self._pending_pos = None
@@ -97,13 +97,15 @@ class PynergyHandler:
     @staticmethod
     async def on_cbye(msg: MsgBase, client: 'PynergyClient'):
         logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}')
-        logger.opt(lazy=True).info('{log}', log=lambda: '收到关闭连接消息')
+        logger.opt(lazy=True).info('{log}', log=lambda: 'Received connection close message')
         client.running = False
 
     async def on_cinn(self, msg: CEnterMsg, client: 'PynergyClient'):
         logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}')
-        logger.opt(lazy=True).info('{log}',
-                                   log=lambda: f'进入屏幕，位置: ({msg.entry_x}, {msg.entry_y})')
+        logger.opt(lazy=True).info(
+            '{log}',
+            log=lambda: f'Entered screen at position: ({msg.entry_x}, {msg.entry_y})'
+        )
         self.mouse.move_absolute(msg.entry_x, msg.entry_y)
         self.ctx.logical_pos = (msg.entry_x, msg.entry_y)
         client.state = ClientState.ACTIVE
@@ -179,7 +181,7 @@ class PynergyHandler:
         now = time.perf_counter()
 
         if now - self.last_mouse_time < self.interval:
-            # 也许会有鼠标需要去抖？移动一定距离再发送
+            # Maybe mouse debounce needed? Send after moving certain distance
             # self._pending_pos = (msg.x, msg.y)
             return
 
@@ -225,7 +227,7 @@ class PynergyHandler:
 
     @staticmethod
     async def on_dinf(msg: MsgBase, client: 'PynergyClient'):
-        logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}, 发送 CIAK')
+        logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}, send CIAK')
         await client.send_message(CInfoAckMsg().pack_for_socket())
 
     @staticmethod
@@ -252,7 +254,7 @@ class PynergyHandler:
         logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}')
 
     async def on_qinf(self, msg: MsgBase, client: 'PynergyClient'):
-        logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}，发送 DINF')
+        logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}, send DINF')
         try:
             self.ctx.update_screen_info()
             self.ctx.sync_logical_to_real()
@@ -283,7 +285,8 @@ class PynergyHandler:
     @staticmethod
     async def on_eicv(msg: EIncompatibleMsg, client: 'PynergyClient'):
         logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}')
-        logger.opt(lazy=True).error('{log}', log=lambda: f'版本不兼容错误: {msg.major}.{msg.minor}')
+        logger.opt(lazy=True).error('{log}',
+                                    log=lambda: f'Version incompatible error: {msg.major}.{msg.minor}')
         await client.stop()
 
     @staticmethod

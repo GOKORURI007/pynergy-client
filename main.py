@@ -1,6 +1,6 @@
 import typer
 
-from pynergy_client.app import main  # 使用绝对导入
+from pynergy_client.app import main
 
 if __name__ == '__main__':
     typer.run(main)

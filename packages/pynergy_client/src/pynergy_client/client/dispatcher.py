@@ -20,25 +20,25 @@ class MessageDispatcher(DispatcherProtocol):
         )
 
         self.last_move_time = 0
-        self.throttle_interval = 0.016  # 约 60fps 的采样率
+        self.throttle_interval = 0.016  # Approximately 60fps sampling rate
 
     def _build_handler_map(self) -> dict:
-        """扫描 handler 实例中所有以 on_ 开头的方法"""
+        """Scan all methods in handler instance that start with on_"""
         mapping = {}
         for name, method in inspect.getmembers(self.handler, predicate=callable):
             if name.startswith('on_'):
-                # 提取协议代码部分，例如 "on_hello" -> "hello"
+                # Extract protocol code part, e.g. "on_hello" -> "hello"
                 msg_code = name[3:].upper()
                 if msg_code == 'HELLO':
                     msg_code = 'Hello'
                 if msg_code == 'HELLOBACK':
                     msg_code = 'HelloBack'
-                assert msg_code in MsgID.__members__, f'{msg_code} 不是一个有效的消息代码'
+                assert msg_code in MsgID.__members__, f'{msg_code} is not a valid message code'
                 mapping[msg_code] = method
 
         logger.opt(lazy=True).debug(
             '{log}',
-            log=lambda: f'{self.__class__} 已加载 {len(mapping)} 个处理函数: {list(mapping.keys())}'
+            log=lambda: f'{self.__class__} loaded {len(mapping)} handler functions: {list(mapping.keys())}'
         )
         return mapping
 
@@ -48,11 +48,11 @@ class MessageDispatcher(DispatcherProtocol):
         await self.queue.put(task)
 
     async def worker(self, worker_id):
-        """消费者：从队列取任务并执行"""
+        """Consumer: Take tasks from queue and execute"""
         while True:
             task = await self.queue.get()
             try:
-                # 执行 Handler，并将 client 传入
+                # Execute Handler and pass client
                 await task.handler(task.msg, task.client)
             except Exception as e:
                 print(f'Worker-{worker_id} Error: {e}')

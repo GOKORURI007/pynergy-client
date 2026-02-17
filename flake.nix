@@ -15,7 +15,7 @@
       python = pkgs.python313;
       # 把当前目录当 Python 包构建
       pynergy-client = python.pkgs.buildPythonApplication rec {
-        pname = "pynergy-client";
+        pname = "pynergy";
         version = "0.1.5";
         src = ./.;
 
@@ -45,13 +45,13 @@
 
         # 使用 postFixup 在构建最后阶段“注入”环境变量
         postFixup = ''
-          wrapProgram $out/bin/pynergy-client \
+          wrapProgram $out/bin/pynergy \
             --set C_INCLUDE_PATH "${pkgs.linuxHeaders}/include:${pkgs.libevdev}/include/libevdev-1.0" \
             --set LIBRARY_PATH "${pkgs.libevdev}/lib" \
             --prefix LD_LIBRARY_PATH : "${pkgs.libevdev}/lib:${pkgs.libxkbcommon}/lib"
         '';
 
-        meta.mainProgram = "pynergy-client"; # 让 nix run 知道主命令
+        meta.mainProgram = "pynergy"; # 让 nix run 知道主命令
       };
     in
     {
@@ -61,7 +61,7 @@
 
       apps.${system}.default = {
         type = "app";
-        program = "${pynergy-client}/bin/pynergy-client";
+        program = "${pynergy}/bin/pynergy";
       };
     };
 }

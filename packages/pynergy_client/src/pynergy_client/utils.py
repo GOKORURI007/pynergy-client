@@ -20,11 +20,11 @@ from .device.base import PlatformInfo
 
 def init_logger(cfg: config.Config):
     """
-    初始化日志记录器。
+    Initialize logger.
 
-    该函数会移除默认的日志处理器，并添加两个新的处理器：
-    1. 标准输出（stdout）处理器：用于实时显示日志，带有颜色和简洁的格式。
-    2. 文件处理器：将日志记录到指定文件，支持按大小轮转和压缩。
+    This function removes default handlers and adds two new handlers:
+    1. Stdout handler: Displays logs in real-time with colors and concise format.
+    2. File handler: Records logs to specified file with size-based rotation and compression.
 
     Args:
         cfg: config dict
@@ -57,9 +57,10 @@ def init_backend(
     BaseDeviceContext | None, BaseMouseVirtualDevice | None, BaseKeyboardVirtualDevice | None
 ]:
     """
-    初始化输入设备后端。
+    Initialize input device backend.
 
-    该函数会根据配置中的输入设备后端名称，调用相应的初始化函数。
+    This function calls the corresponding initialization function based on the
+    input device backend name in the configuration.
 
     Args:
         cfg: config dict
@@ -125,5 +126,5 @@ def get_mouse_position_hyprland():
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
         s.connect(addr)
         s.sendall(b'cursorpos')
-        response = s.recv(1024).decode()  # 得到 "x, y"
+        response = s.recv(1024).decode()  # Get "x, y"
         return response

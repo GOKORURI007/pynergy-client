@@ -4,7 +4,7 @@ version = "0.1.5"
 description = "A python client for synergy protocol"
 requires-python = ">=3.13"
 dependencies = [
-    "pynergy-protocol", # 添加：workspace 内部依赖
+    "pynergy-protocol",
     "evdev>=1.9.2; sys_platform == 'linux'",
     "loguru>=0.7.3",
     "platformdirs>=4.5.0",
