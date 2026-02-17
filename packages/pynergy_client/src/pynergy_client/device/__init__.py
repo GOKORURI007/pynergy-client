@@ -4,8 +4,8 @@ from .base import (
     BaseMouseVirtualDevice,
     BaseVirtualDevice,
 )
-from .device_ctx_wayland import WaylandDeviceContext
-from .vdev_uinput import UInputKeyboardDevice, UInputMouseDevice
+from pynergy_client.device.context.device_ctx_wayland import WaylandDeviceContext
+from pynergy_client.device.backends.vdev_uinput import UInputKeyboardDevice, UInputMouseDevice
 
 __all__ = [
     'BaseDeviceContext',

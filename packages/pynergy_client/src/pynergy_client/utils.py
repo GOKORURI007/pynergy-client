@@ -92,39 +92,26 @@ def init_backend(
         match cfg.mouse_backend:
             case 'uinput':
                 mouse = UInputMouseDevice()
-            case 'pynput':
-                raise NotImplementedError('pynput backend is WiP')
             case 'libei':
                 raise NotImplementedError('libei backend is WiP')
             case 'wlr':
                 raise NotImplementedError('wlr backend is WiP')
+            case _:
+                raise ValueError(f'Unsupported mouse backend: {cfg.mouse_backend}')
 
     if cfg.keyboard_backend is not None:
         match cfg.keyboard_backend:
             case 'uinput':
                 keyboard = UInputKeyboardDevice()
-            case 'pynput':
-                raise NotImplementedError('pynput backend is WiP')
             case 'libei':
                 raise NotImplementedError('libei backend is WiP')
             case 'wlr':
                 raise NotImplementedError('wlr backend is WiP')
+            case _:
+                raise ValueError(f'Unsupported keyboard backend: {cfg.keyboard_backend}')
 
     logger.info(f'Using {device_ctx.__class__.__name__} device context')
     logger.info(f'Using {mouse.__class__.__name__} mouse backend')
     logger.info(f'Using {keyboard.__class__.__name__} keyboard backend')
 
     return device_ctx, mouse, keyboard
-
-
-his = os.environ.get('HYPRLAND_INSTANCE_SIGNATURE')
-runtime_dir = os.environ.get('XDG_RUNTIME_DIR')
-addr = f'{runtime_dir}/hypr/{his}/.socket.sock'
-
-
-def get_mouse_position_hyprland():
-    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
-        s.connect(addr)
-        s.sendall(b'cursorpos')
-        response = s.recv(1024).decode()  # Get "x, y"
-        return response

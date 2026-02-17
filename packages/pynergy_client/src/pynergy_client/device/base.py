@@ -9,7 +9,7 @@ from loguru import logger
 
 @dataclass
 class PlatformInfo:
-    """设备信息"""
+    """Device information"""
 
     platform: str = platform.system()
     session_type: str = os.environ.get('XDG_SESSION_TYPE', 'unknown')
@@ -25,56 +25,86 @@ class BaseDeviceContext(ABC):
 
     @abstractmethod
     def update_screen_info(self) -> None:
-        """获取当前系统的屏幕分辨率、缩放等元数据"""
+        """Get current system screen resolution, scale, and other metadata"""
         pass
 
     @abstractmethod
     def get_real_cursor_pos(self) -> Tuple[int, int] | None:
-        """获取系统底层真实的鼠标指针位置"""
+        """Get the real cursor position from the system"""
         pass
 
     def sync_logical_to_real(self):
-        """同步理论位置到真实位置，防止偏移累积"""
+        """Sync logical position to real position to prevent offset accumulation"""
         real_pos = self.get_real_cursor_pos()
         if real_pos:
             self.logical_pos = real_pos
 
     def calculate_relative_move(self, target_x: int, target_y: int) -> Tuple[int, int]:
         """
-        将目标绝对坐标转换为相对于当前理论位置的位移量，
-        并自动更新内部理论位置。
+        Convert target absolute coordinates to relative displacement from current logical position,
+        and automatically update internal logical position.
         """
-        # 1. 边界裁剪：防止目标坐标超出本地屏幕范围
+        # 1. Boundary clamping: prevent target coordinates from exceeding local screen range
         clamped_x = max(0, min(target_x, self.screen_size[0]))
         clamped_y = max(0, min(target_y, self.screen_size[1]))
 
-        # 2. 计算位移 (Delta)
+        # 2. Calculate displacement (Delta)
         dx = clamped_x - self.logical_pos[0]
         dy = clamped_y - self.logical_pos[1]
 
-        # 3. 更新理论位置 (重要：这是为了下次计算)
+        # 3. Update logical position (important: this is for next calculation)
         self.logical_pos = (clamped_x, clamped_y)
         logger.opt(lazy=True).trace('{log}', log=lambda: f'Logical pos: {self.logical_pos}')
         return dx, dy
+
+    @staticmethod
+    def get_active_screen_resolution_by_kernel():
+        drm_path = "/sys/class/drm"
+        # Filter out all interface directories (e.g., card1-DP-1)
+        interfaces = [d for d in os.listdir(drm_path) if "-" in d and d.startswith("card")]
+
+        for interface in interfaces:
+            interface_path = os.path.join(drm_path, interface)
+
+            # 1. Check connection status
+            status_file = os.path.join(interface_path, "status")
+            if not os.path.exists(status_file):
+                continue
+
+            with open(status_file, "r") as f:
+                if f.read().strip() != "connected":
+                    continue
+
+            # 2. Read resolution mode
+            modes_file = os.path.join(interface_path, "modes")
+            if os.path.exists(modes_file):
+                with open(modes_file, "r") as f:
+                    # The first line is usually the current active resolution, format: "2560x1440"
+                    current_mode = f.readline().strip()
+                    if current_mode:
+                        width, height = map(int, current_mode.split('x'))
+                        return width, height
+
+        return None
 
 
 class BaseVirtualDevice(ABC):
     @abstractmethod
     def syn(self) -> None:
-        """同步事件"""
+        """Synchronize events"""
         pass
 
     @abstractmethod
     def close(self) -> None:
-        """关闭设备"""
+        """Close device"""
         pass
 
     def __enter__(self):
-        """上下文管理器入口"""
+        """Context manager entry"""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """上下文管理器退出"""
+        """Context manager exit"""
         self.close()
 
 
@@ -84,17 +114,17 @@ class BaseMouseVirtualDevice(BaseVirtualDevice):
 
     @abstractmethod
     def move_absolute(self, x: int, y: int) -> None:
-        """执行绝对坐标移动"""
+        """Execute absolute coordinate movement"""
         pass
 
     @abstractmethod
     def move_relative(self, dx: int, dy: int) -> None:
-        """执行相对坐标位移"""
+        """Execute relative coordinate displacement"""
         pass
 
     @abstractmethod
     def wheel_relative(self, dy: int = 0, dx: int = 0) -> None:
-        """写入滚轮事件"""
+        """Write wheel event"""
         pass
 
     @abstractmethod
@@ -104,7 +134,7 @@ class BaseMouseVirtualDevice(BaseVirtualDevice):
 
     @abstractmethod
     def send_button(self, button_id: int, down: bool) -> None:
-        """发送鼠标按键（左/中/右）指令"""
+        """Send mouse button (left/middle/right) command"""
         pass
 
     @abstractmethod
@@ -120,7 +150,7 @@ class BaseKeyboardVirtualDevice(BaseVirtualDevice):
 
     @abstractmethod
     def send_key(self, key_code: int, down: bool) -> None:
-        """发送按键指令"""
+        """Send key command"""
         pass
 
     @abstractmethod
@@ -130,5 +160,5 @@ class BaseKeyboardVirtualDevice(BaseVirtualDevice):
 
     @abstractmethod
     def sync_modifiers(self, modifiers: int) -> None:
-        """同步修饰键状态"""
+        """Sync modifier key state"""
         pass

@@ -6,7 +6,7 @@ from evdev import ecodes as e
 from loguru import logger
 
 from packages.pynergy_protocol.src.pynergy_protocol import ModifierKeyMask
-from .base import BaseKeyboardVirtualDevice, BaseMouseVirtualDevice
+from pynergy_client.device.base import BaseKeyboardVirtualDevice, BaseMouseVirtualDevice
 
 
 class UInputMouseDevice(BaseMouseVirtualDevice):
