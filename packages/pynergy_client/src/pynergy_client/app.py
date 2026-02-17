@@ -1,5 +1,6 @@
 import asyncio
 import json
+import platform
 import sys
 from dataclasses import fields, replace
 from pathlib import Path
@@ -7,14 +8,14 @@ from typing import Annotated
 
 import typer
 from loguru import logger
-from platformdirs import user_config_path
+from platformdirs import user_config_path, user_log_path
 
+from pynergy_protocol import PynergyParser
 from .client.client import PynergyClient
 from .client.dispatcher import MessageDispatcher
 from .client.handlers import PynergyHandler
 from .config import Available_Backends, Config, LogLevel
 from .i18n import _
-from pynergy_protocol import PynergyParser
 from .utils import init_backend, init_logger
 
 app = typer.Typer(help=_('Pynergy Client'), add_completion=True)
@@ -33,6 +34,15 @@ def main(
     ] = None,
     keyboard_backend: Annotated[
         Available_Backends | None, typer.Option(help=_('Keyboard backend'))
+    ] = None,
+    tls: Annotated[
+        bool | None, typer.Option(help=_('Whether to use tls'))
+    ] = None,
+    mtls: Annotated[
+        bool | None, typer.Option(help=_('Whether to use mtls'))
+    ] = None,
+    tls_trust: Annotated[
+        bool | None, typer.Option(help=_('Whether to trust the server'))
     ] = None,
     screen_width: Annotated[int | None, typer.Option(help=_('Screen width'))] = None,
     screen_height: Annotated[int | None, typer.Option(help=_('Screen height'))] = None,
@@ -96,15 +106,15 @@ async def run_app(cfg: Config):
     assert device_ctx and mouse and keyboard
     if not cfg.screen_width or not cfg.screen_height:
         device_ctx.update_screen_info()
-        logger.info(f'Auto-detected screen size: {device_ctx.screen_size[0]}x{device_ctx.screen_size[1]}')
+        logger.info(
+            f'Auto-detected screen size: {device_ctx.screen_size[0]}x{device_ctx.screen_size[1]}'
+        )
 
     handler = PynergyHandler(cfg, device_ctx, mouse, keyboard)
     dispatcher = MessageDispatcher(handler)
     parser = PynergyParser()
     client = PynergyClient(
-        server=cfg.server,
-        port=cfg.port,
-        client_name=cfg.client_name,
+        cfg=cfg,
         parser=parser,
         dispatcher=dispatcher,
     )

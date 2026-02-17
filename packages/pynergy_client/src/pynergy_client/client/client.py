@@ -13,6 +13,8 @@ from loguru import logger
 from packages.pynergy_protocol.src.pynergy_protocol import HelloBackMsg, HelloMsg, MsgID, \
     PynergyParser
 from .protocols import ClientProtocol, ClientState, DispatcherProtocol
+from .. import config
+from ..utils import setup_ssl_context, validate_cert
 
 if TYPE_CHECKING:
     from .dispatcher import MessageDispatcher
@@ -27,23 +29,14 @@ class PynergyClient(ClientProtocol):
 
     def __init__(
         self,
-        server: str,
-        port: int = 24800,
-        client_name: str = 'Pynergy',
+        cfg: config.Config,
         *,
         parser: PynergyParser,
         dispatcher: 'MessageDispatcher',
     ):
         """Initialize the client
-
-        Args:
-            server: Server IP address
-            port: Port number (default: 24800)
-            client_name: Client name
         """
-        self.server: str = server
-        self.port: int = port
-        self.name: str = client_name
+        self.cfg = cfg
 
         self.state: ClientState = ClientState.DISCONNECTED
         self.listen_task = None
@@ -58,21 +51,28 @@ class PynergyClient(ClientProtocol):
     async def _connect(self) -> None:
         """Connect to Deskflow server and perform handshake"""
         self.state = ClientState.CONNECTING
-        logger.info(f'Connecting to {self.server}:{self.port}...')
+        logger.info(f'Connecting to {self.cfg.server}:{self.cfg.port}...')
         # 1. Establish async connection
-        self.reader, self.writer = await asyncio.open_connection(self.server, self.port)
-
+        context = setup_ssl_context(self.cfg)
+        self.reader, self.writer = await asyncio.open_connection(
+            self.cfg.server,
+            self.cfg.port,
+            ssl=context
+        )
+        await validate_cert(self.writer, self.cfg)
         # 2. Wait for server Hello (async read)
         logger.debug('Waiting for server Hello message...')
-        data = await self.reader.read(1024)
+        data = await asyncio.wait_for(self.reader.read(1024), timeout=10.0)
         self.parser.feed(data)
         msg: HelloMsg | None = self.parser.next_handshake_msg(MsgID.Hello)
         assert msg, 'Did not receive server Hello message'
         logger.debug(f'Server protocol: {msg.protocol_name} {msg.major}.{msg.minor}')
 
         # 3. Send HelloBack (async write)
-        logger.debug(f'Sending HelloBack, client name: {self.name}')
-        back_msg: HelloBackMsg = HelloBackMsg(msg.protocol_name, msg.major, msg.minor, self.name)
+        logger.debug(f'Sending HelloBack, client name: {self.cfg.client_name}')
+        back_msg: HelloBackMsg = HelloBackMsg(
+            msg.protocol_name, msg.major, msg.minor, self.cfg.client_name
+        )
         self.writer.write(back_msg.pack_for_socket())
         await self.writer.drain()  # Ensure data is actually sent
 

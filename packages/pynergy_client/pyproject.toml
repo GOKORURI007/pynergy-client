@@ -10,7 +10,8 @@ dependencies = [
     "platformdirs>=4.5.0",
     "toml>=0.10.2",
     "typer>=0.23.1",
-    "pynput",
+    "cryptography>=46.0.5",
+    "questionary>=2.1.1",
 ]
 
 [project.scripts]

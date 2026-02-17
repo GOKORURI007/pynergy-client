@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from platformdirs import user_log_path
+from platformdirs import user_config_path, user_log_path
 
 LogLevel = Literal['TRACE', 'DEBUG', 'INFO', 'SUCCESS', 'WARNING', 'ERROR', 'CRITICAL']
 Available_Backends = Literal[
@@ -32,13 +32,14 @@ class Config:
     mouse_move_threshold: int = 8  # Unit: ms, approx 125Hz, balances smoothness and performance
     mouse_pos_sync_freq: int = 2  # Sync frequency, sync actual mouse position with system every n moves
 
+    tls: bool = False
+    mtls: bool = False
+    tls_trust: bool = False
+    pem_path: Path = user_config_path(appname='pynergy', appauthor=False) / 'pynergy.pem'
+
     # --- Logger ---
     logger_name: str = 'Pynergy'
-    # Log directory
-    log_dir: Path = user_log_path(appname='pynergy', appauthor=False)
-    # Log file name
-    log_file: str = 'pynergy.log'
-    # File output log level
-    log_level_file: LogLevel = 'WARNING'
-    # Stdout log level
-    log_level_stdout: LogLevel = 'INFO'
+    log_dir: Path = user_log_path(appname='pynergy', appauthor=False)  # Log directory
+    log_file: str = 'pynergy.log'  # Log file name
+    log_level_file: LogLevel = 'WARNING'  # File output log level
+    log_level_stdout: LogLevel = 'INFO'  # Stdout log level
