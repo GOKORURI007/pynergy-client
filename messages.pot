@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-16 16:28+0800\n"
+"POT-Creation-Date: 2026-02-17 17:07+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,68 +17,83 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:20
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:22
 msgid "Pynergy Client"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:26
-#, python-brace-format
-msgid "{device_type} backend. Available: {options}"
-msgstr ""
-
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:36
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:29
 msgid "Path to the configuration file"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:42
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:32
 msgid "Deskflow/Others server IP address"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:46
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:34
 msgid "Port number"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:50
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:35
 msgid "Client name"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:60
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:37
+msgid "Mouse backend"
+msgstr ""
+
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:40
+msgid "Keyboard backend"
+msgstr ""
+
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:42
+msgid "Whether to use tls"
+msgstr ""
+
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:43
+msgid "Whether to use mtls"
+msgstr ""
+
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:44
+msgid "Whether to trust the server"
+msgstr ""
+
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:45
 msgid "Screen width"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:61
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:46
 msgid "Screen height"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:65
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:48
 msgid "Whether to use absolute displacement"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:68
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:51
 msgid "Unit: ms, balances smoothness and performance"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:72
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:55
 msgid "Sync frequency, sync with system real position every n moves"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:76
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:57
 msgid "Logger name"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:77
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:58
 msgid "Log directory location"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:78
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:61
 msgid "Log file name"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:79
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:62
 msgid "File log level"
 msgstr ""
 
-#: /home/yjc/Projects/pynergy-client/src/pynergy_client/app.py:80
+#: /home/yjc/Projects/pynergy/packages/pynergy_client/src/pynergy_client/app.py:64
 msgid "Console log level"
 msgstr ""
 

@@ -23,6 +23,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/pynergy_client"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"src/pynergy_client/locales" = "pynergy_client/locales"
+
 [tool.hatch.build]
 artifacts = [
     "src/pynergy_client/locales/**/*.mo",

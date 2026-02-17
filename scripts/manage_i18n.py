@@ -4,7 +4,7 @@ from pathlib import Path
 
 # 路径配置
 ROOT_DIR = Path(__file__).parent.parent
-SRC_DIR = ROOT_DIR / 'src'
+SRC_DIR = ROOT_DIR / 'packages' / 'pynergy_client' / 'src'
 LOCALES_DIR = SRC_DIR / 'pynergy_client' / 'locales'
 BABEL_CFG = ROOT_DIR / 'babel.cfg'
 POT_FILE = ROOT_DIR / 'messages.pot'
