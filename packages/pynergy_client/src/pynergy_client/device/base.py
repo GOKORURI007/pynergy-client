@@ -54,7 +54,7 @@ class BaseDeviceContext(ABC):
 
         # 3. 更新理论位置 (重要：这是为了下次计算)
         self.logical_pos = (clamped_x, clamped_y)
-        logger.trace(f'Logical pos: {self.logical_pos}')
+        logger.opt(lazy=True).trace('{log}', log=lambda: f'Logical pos: {self.logical_pos}')
         return dx, dy
 
 

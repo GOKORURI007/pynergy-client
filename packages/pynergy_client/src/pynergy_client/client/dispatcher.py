@@ -36,7 +36,10 @@ class MessageDispatcher(DispatcherProtocol):
                 assert msg_code in MsgID.__members__, f'{msg_code} 不是一个有效的消息代码'
                 mapping[msg_code] = method
 
-        logger.debug(f'f{self.__class__} 已加载 {len(mapping)} 个处理函数: {list(mapping.keys())}')
+        logger.opt(lazy=True).debug(
+            '{log}',
+            log=lambda: f'{self.__class__} 已加载 {len(mapping)} 个处理函数: {list(mapping.keys())}'
+        )
         return mapping
 
     async def enqueue(self, msg: Any, client: ClientProtocol):

@@ -15,7 +15,7 @@ class PynergyParser[T: MsgBase]:
         """存入收到的原始字节"""
         if not data:
             return
-        logger.trace(f'Fed {len(data)} bytes into buffer')
+        logger.opt(lazy=True).trace('{log}', log=lambda: f'Fed {len(data)} bytes into buffer')
         self._buffer.extend(data)
 
     def _parse_packet(self, get_class_func):
@@ -36,14 +36,19 @@ class PynergyParser[T: MsgBase]:
 
             # 协议安全检查：防止恶意超大包导致 OOM
             if length > 10 * 1024 * 1024:  # 假设最大包 10MB
-                logger.error(f'Invalid packet length: {length}, clearing buffer')
+                logger.opt(lazy=True).error(
+                    '{log}', log=lambda: f'Invalid packet length: {length}, clearing buffer'
+                )
                 self._buffer.clear()
                 return None
 
             # 检查缓冲区数据是否足够
             total_packet_size = 4 + length
             if len(self._buffer) < total_packet_size:
-                logger.trace(f'Wait for more data: {len(self._buffer)}/{total_packet_size}')
+                logger.opt(lazy=True).trace(
+                    '{log}',
+                    log=lambda: f'Wait for more data: {len(self._buffer)}/{total_packet_size}'
+                )
                 return None
 
             # 2. 提取数据包（跳过前 4 字节长度）
@@ -54,22 +59,30 @@ class PynergyParser[T: MsgBase]:
                 cls = get_class_func(packet)
 
                 if not cls:
-                    logger.warning(
-                        f'Unknown message code: {packet[:4].decode()}, size: {length}. Skipping.'
+                    logger.opt(lazy=True).warning(
+                        '{log}',
+                        log=lambda: f'Unknown message code: {packet[:4].decode()}, size: {length}. Skipping.'
                     )
                     return None
 
                 # 4. 执行反序列化
                 msg_obj = cls.unpack(packet)
-                logger.trace(f'Successfully parsed message: {msg_obj}')
+                logger.opt(lazy=True).trace(
+                    '{log}', log=lambda: f'Successfully parsed message: {msg_obj}'
+                )
                 return msg_obj
 
             except (struct.error, UnicodeDecodeError, ValueError) as e:
-                logger.error(f'Failed to unpack message body (CODE: {packet[:4].decode()}): {e}')
+                logger.opt(lazy=True).error(
+                    '{log}',
+                    log=lambda: f'Failed to unpack message body (CODE: {packet[:4].decode()}): {e}'
+                )
                 return None
 
             except Exception as e:
-                logger.exception(f'Unexpected error during message construction: {e}')
+                logger.opt(lazy=True).exception(
+                    '{log}', log=lambda: f'Unexpected error during message construction: {e}'
+                )
                 return None
 
         finally:

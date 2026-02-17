@@ -155,8 +155,9 @@ class UInputKeyboardDevice(BaseKeyboardVirtualDevice):
             local_state = get_led_state_sysfs(sysfs_name)
 
             if target_state != local_state:
-                logger.debug(
-                    f'[Modifier] {sysfs_name} 状态不一致: '
+                logger.opt(lazy=True).debug(
+                    '{log}',
+                    log=lambda:f'[Modifier] {sysfs_name} 状态不一致: '
                     f'Remote={target_state}, Local={local_state}. 发送翻转按键.'
                 )
                 # 模拟敲击以同步状态
@@ -164,7 +165,7 @@ class UInputKeyboardDevice(BaseKeyboardVirtualDevice):
                 self.send_key(key_code, False)
             else:
                 # 只有在调试高频问题时才开启这一行，否则日志会很多
-                # logger.debug(f"[Modifier] {sysfs_name} 已同步: {local_state}")
+                # logger.opt(lazy=True).debug('{log}', log=lambda:f"[Modifier] {sysfs_name} 已同步: {local_state}")
                 pass
 
         # 2. 处理普通修饰键 is this neccasry?
@@ -214,6 +215,7 @@ def get_led_state_sysfs(led_name: str) -> bool:
                 if f.read().strip() != '0':
                     return True
         except Exception as e:
-            logger.warning(f'Error reading LED state: {e}')
+            err_str = str(e)
+            logger.opt(lazy=True).warning('{log}', log=lambda:f'Error reading LED state: {err_str}')
             continue
     return False

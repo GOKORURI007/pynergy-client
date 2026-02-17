@@ -27,7 +27,10 @@ class WaylandDeviceContext(BaseDeviceContext):
                             if 'x' in part and part.replace('x', '').isdigit():
                                 width, height = part.split('x')
                                 self.screen_size = (int(width), int(height))
-                                logger.debug(f'通过 wlr-randr 获取屏幕尺寸: {self.screen_size}')
+                                logger.opt(lazy=True).debug(
+                                    '{log}',
+                                    log=lambda: f'通过 wlr-randr 获取屏幕尺寸: {self.screen_size}'
+                                )
                                 return
 
             # 尝试使用 hyprctl (Hyprland)
@@ -45,11 +48,18 @@ class WaylandDeviceContext(BaseDeviceContext):
                                 if 'x' in res_part:
                                     width, height = res_part.split('x')
                                     self.screen_size = (int(width), int(height))
-                                    logger.debug(f'通过 hyprctl 获取屏幕尺寸: {self.screen_size}')
+                                    logger.opt(lazy=True).debug(
+                                        '{log}',
+                                        log=lambda: f'通过 hyprctl 获取屏幕尺寸: {self.screen_size}'
+                                    )
                                     return
 
         except Exception as e:
-            logger.warning(f'Wayland 屏幕信息获取失败: {e}')
+            err_str = str(e)
+            logger.opt(lazy=True).warning(
+                '{log}',
+                log=lambda: f'Wayland 屏幕信息获取失败: {err_str}'
+            )
 
         # 回退方案：检查环境变量
         env_width = os.environ.get('SCREEN_WIDTH')
@@ -57,14 +67,20 @@ class WaylandDeviceContext(BaseDeviceContext):
         if env_width and env_height:
             try:
                 self.screen_size = (int(env_width), int(env_height))
-                logger.debug(f'通过环境变量获取屏幕尺寸: {self.screen_size}')
+                logger.opt(lazy=True).debug(
+                    '{log}',
+                    log=lambda: f'通过环境变量获取屏幕尺寸: {self.screen_size}'
+                )
                 return
             except ValueError:
-                logger.warning('环境变量 SCREEN_WIDTH/SCREEN_HEIGHT 格式错误')
+                logger.opt(lazy=True).warning(
+                    '{log}',
+                    log=lambda: '环境变量 SCREEN_WIDTH/SCREEN_HEIGHT 格式错误'
+                )
 
         # 最后的回退方案：使用默认值
         self.screen_size = (1920, 1080)
-        logger.warning(f'使用默认屏幕尺寸: {self.screen_size}')
+        logger.opt(lazy=True).warning('{log}', log=lambda: f'使用默认屏幕尺寸: {self.screen_size}')
 
     def get_real_cursor_pos(self) -> Tuple[int, int] | None:
         """根据不同的桌面环境获取鼠标指针位置"""
@@ -76,7 +92,8 @@ class WaylandDeviceContext(BaseDeviceContext):
                 x, y = map(int, out.strip().split(','))
                 return x, y
             except Exception as e:
-                logger.warning(f'Hyprland 获取失败: {e}')
+                err_str = str(e)
+                logger.opt(lazy=True).warning('{log}', log=lambda: f'Hyprland 获取失败: {err_str}')
 
         # B. KDE Plasma (Wayland)
         if shutil.which('qdbus'):
@@ -89,7 +106,11 @@ class WaylandDeviceContext(BaseDeviceContext):
                 parts = out.strip().replace('QPoint(', '').replace(')', '').split(',')
                 return int(parts[0]), int(parts[1])
             except Exception as e:
-                logger.warning(f'KDE Plasma 获取失败: {e}')
+                err_str = str(e)
+                logger.opt(lazy=True).warning(
+                    '{log}',
+                    log=lambda: f'KDE Plasma 获取失败: {err_str}'
+                )
 
         # C. Sway/Wayfire (使用 swaymsg)
         if shutil.which('swaymsg'):
@@ -98,7 +119,8 @@ class WaylandDeviceContext(BaseDeviceContext):
                 # 这个比较复杂，需要解析 JSON，暂时跳过
                 pass
             except Exception as e:
-                logger.warning(f'Sway 获取失败: {e}')
+                err_str = str(e)
+                logger.opt(lazy=True).warning('{log}', log=lambda: f'Sway 获取失败: {err_str}')
 
         # D. 通用方案：尝试使用 wlroots 工具
         if shutil.which('wlrctl'):
@@ -112,10 +134,14 @@ class WaylandDeviceContext(BaseDeviceContext):
                         y = int(parts[parts.index(part) + 1].rstrip(','))
                         return x, y
             except Exception as e:
-                logger.warning(f'wlrctl 获取失败: {e}')
+                err_str = str(e)
+                logger.opt(lazy=True).warning('{log}', log=lambda: f'wlrctl 获取失败: {err_str}')
 
         # E. 最后尝试使用环境变量或默认值
-        logger.warning('警告: 当前Wayland环境下无法获取精确的鼠标位置')
+        logger.opt(lazy=True).warning(
+            '{log}',
+            log=lambda: '警告: 当前Wayland环境下无法获取精确的鼠标位置'
+        )
         # 返回中心位置作为 fallback
         if self.screen_size[0] > 0 and self.screen_size[1] > 0:
             return self.screen_size[0] // 2, self.screen_size[1] // 2

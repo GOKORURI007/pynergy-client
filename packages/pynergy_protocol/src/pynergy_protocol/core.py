@@ -75,7 +75,10 @@ class MsgBase[T]:
     @classmethod
     def unpack(cls, data: bytes) -> Self:
         try:
-            logger.trace(f'Unpacking {cls.__name__}: data length={len(data)} bytes')
+            logger.opt(lazy=True).trace(
+                '{log}',
+                log=lambda: f'Unpacking {cls.__name__}: data length={len(data)} bytes'
+            )
             data = cls.before_unpack(data)
             offset = 0
             args = []
@@ -93,8 +96,9 @@ class MsgBase[T]:
                         val = struct.unpack_from(f'>{fmt}', data, offset)[0]
                         args.append(val)
                         offset += size
-                        logger.trace(
-                            f'Unpack fixed values: format={fmt}, value={val}, new offset={offset}'
+                        logger.opt(lazy=True).trace(
+                            '{log}',
+                            log=lambda: f'Unpack fixed values: format={fmt}, value={val}, new offset={offset}'
                         )
 
                     elif op == 'FIX_STR':
@@ -103,8 +107,9 @@ class MsgBase[T]:
                         val = raw_val.decode().rstrip('\x00')
                         args.append(val)
                         offset += size
-                        logger.trace(
-                            f'Unpack fixed string: format={fmt}, value={val}, new offset={offset}'
+                        logger.opt(lazy=True).trace(
+                            '{log}',
+                            log=lambda: f'Unpack fixed string: format={fmt}, value={val}, new offset={offset}'
                         )
 
                     elif op == 'VAR_STR':
@@ -124,9 +129,10 @@ class MsgBase[T]:
                         val = data[offset: offset + length].decode()
                         args.append(val)
                         offset += length
-                        logger.debug(
-                            f'Unpack Lengthy String: '
-                            f'length={length}, value={val}, new offset={offset}'
+                        logger.opt(lazy=True).debug(
+                            '{log}',
+                            log=lambda: f'Unpack Lengthy String: '
+                                        f'length={length}, value={val}, new offset={offset}'
                         )
 
                 except UnicodeDecodeError as e:
@@ -137,17 +143,24 @@ class MsgBase[T]:
                     ) from e
 
             if offset < len(data):
-                logger.warning(
-                    f'{len(data) - offset} bytes of unprocessed data remaining after unpacking'
+                logger.opt(lazy=True).warning(
+                    '{log}',
+                    log=lambda: f'{len(data) - offset} bytes of unprocessed data remaining after unpacking'
                 )
 
             result = cls(*args)  # type: ignore[call-arg]
             result = cls.after_unpack(result)
-            logger.trace(f'Successful unpacking {cls.__name__}: {result}')
+            logger.opt(lazy=True).trace(
+                '{log}',
+                log=lambda: f'Successful unpacking {cls.__name__}: {result}'
+            )
             return result
 
         except Exception as e:
-            logger.error(f'Unpacking {cls.__name__} failed: {e}', exc_info=True)
+            logger.opt(lazy=True).error(
+                '{log}',
+                log=lambda: f'Unpacking {cls.__name__} failed: {e}',
+            )
             raise
 
     def pack(self) -> bytes:
@@ -155,13 +168,14 @@ class MsgBase[T]:
         Dynamically Pack based on the order of fields defined by the class and _INSTRUCTIONS
         """
         try:
-            logger.trace(f'Start packing {self}')
+            logger.opt(lazy=True).trace('{log}', log=lambda: f'Start packing {self}')
             self.before_pack()
             result = bytearray()
 
             code_bytes = struct.pack(f'>{len(self.CODE)}s', self.CODE.encode('utf-8'))
             result.extend(code_bytes)
-            logger.trace(f'Pack message code: {self.CODE}, length={len(code_bytes)}')
+            logger.opt(lazy=True).trace('{log}',
+                                        log=lambda: f'Pack message code: {self.CODE}, length={len(code_bytes)}')
 
             # Get the values of all fields defined by the dataclass (in order of definition)
             data_fields = [
@@ -181,15 +195,19 @@ class MsgBase[T]:
             for i, ((op, size, fmt), field_def) in enumerate(zip(self._INSTRUCTIONS, data_fields)):
                 try:
                     val = getattr(self, field_def.name)
-                    logger.trace(
-                        f'Process field {field_def.name}: value={val}, operation={op}, format={fmt}'
+                    logger.opt(lazy=True).trace(
+                        '{log}',
+                        log=lambda: f'Process field {field_def.name}: value={val}, operation={op}, format={fmt}'
                     )
 
                     if op == 'FIX_VAL':
                         # Processing values (I, H, B, etc.)
                         packed_val = struct.pack(f'>{fmt}', val)
                         result.extend(packed_val)
-                        logger.trace(f'Packing fixed value: {val} -> {packed_val.hex()}')
+                        logger.opt(lazy=True).trace(
+                            '{log}',
+                            log=lambda: f'Packing fixed value: {val} -> {packed_val.hex()}'
+                        )
 
                     elif op == 'FIX_STR':
                         # Handle fixed-length strings, ensuring they are encoded as
@@ -200,7 +218,10 @@ class MsgBase[T]:
                             # completion \x00 based on FMT (e.g. "7s").
                             packed_str = struct.pack(f'>{fmt}', s_bytes)
                             result.extend(packed_str)
-                            logger.trace(f"打包固定字符串: '{val}' -> {packed_str.hex()}")
+                            logger.opt(lazy=True).trace(
+                                '{log}',
+                                log=lambda: f"打包固定字符串: '{val}' -> {packed_str.hex()}"
+                            )
                         except UnicodeEncodeError as e:
                             raise ValueError(f'编码字符串字段 {field_def.name} 失败: {e}') from e
 
@@ -214,8 +235,9 @@ class MsgBase[T]:
                             result.extend(length_bytes)
                             result.extend(s_bytes)
                             logger.trace(
-                                f'Packing Long String: {val} '
-                                f'(length={length}) -> {length_bytes.hex()}{s_bytes.hex()}'
+                                '{log}',
+                                log=lambda: f'Packing Long String: {val} '
+                                            f'(length={length}) -> {length_bytes.hex()}{s_bytes.hex()}'
                             )
                         except UnicodeEncodeError as e:
                             raise ValueError(
@@ -228,19 +250,26 @@ class MsgBase[T]:
                         f'failed with format={fmt}: {e}'
                     ) from e
                 except Exception as e:
-                    logger.error(f'Error with packaging field {field_def.name}: {e}', exc_info=True)
+                    logger.opt(lazy=True).error(
+                        '{log}',
+                        log=lambda: f'Error with packaging field {field_def.name}: {e}',
+                    )
                     raise
 
             final_result = bytes(result)
             final_result = self.after_pack(final_result)
-            logger.trace(
-                f'Successfully packed {self.__class__.__name__}: '
-                f'total length={len(final_result)} bytes'
+            logger.opt(lazy=True).trace(
+                '{log}',
+                log=lambda: f'Successfully packed {self.__class__.__name__}: '
+                            f'total length={len(final_result)} bytes'
             )
             return final_result
 
         except Exception as e:
-            logger.error(f'Pack {self.__class__.__name__} failed: {e}', exc_info=True)
+            logger.opt(lazy=True).error(
+                '{log}',
+                log=lambda: f'Pack {self.__class__.__name__} failed: {e}',
+            )
             raise
 
     def pack_for_socket(self) -> bytes:
@@ -282,11 +311,17 @@ class Registry:
                 )
 
             if msg_code in cls._MAPPING:
-                logger.warning(f'The message type {msg_code} is registered and will be overwritten')
+                logger.opt(lazy=True).warning(
+                    '{log}',
+                    log=lambda: f'The message type {msg_code} is registered and will be overwritten'
+                )
 
             cls._MAPPING[msg_code] = subclass
             subclass.CODE = msg_code
-            logger.trace(f'Registration message type: {msg_code} -> {subclass.__name__}')
+            logger.opt(lazy=True).trace(
+                '{log}',
+                log=lambda: f'Registration message type: {msg_code} -> {subclass.__name__}'
+            )
             return subclass
 
         return wrapper
@@ -294,11 +329,14 @@ class Registry:
     @classmethod
     def get_class(cls, msg_code: MsgID) -> type[MsgBase]:
         if msg_code not in cls._MAPPING:
-            logger.warning(f'Message Not Found: {msg_code}')
+            logger.opt(lazy=True).warning('{log}', log=lambda: f'Message Not Found: {msg_code}')
             raise KeyError(f'Unregistered message type: {msg_code}')
 
         result = cls._MAPPING[msg_code]
-        logger.trace(f'Get message class: {msg_code} -> {result.__name__}')
+        logger.opt(lazy=True).trace(
+            '{log}',
+            log=lambda: f'Get message class: {msg_code} -> {result.__name__}'
+        )
         return result
 
     @classmethod

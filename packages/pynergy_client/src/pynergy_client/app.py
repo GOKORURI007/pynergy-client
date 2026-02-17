@@ -123,6 +123,7 @@ async def run_app(cfg: Config):
     except KeyboardInterrupt:
         logger.info('收到中断信号，正在退出...')
     except Exception as e:
+        raise e
         logger.error(f'客户端错误: {e}')
         sys.exit(1)
     finally:
