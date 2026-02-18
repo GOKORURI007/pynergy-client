@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Protocol
 
-from packages.pynergy_protocol.src.pynergy_protocol import MsgBase, PynergyParser
+from pynergy_protocol import MsgBase, PynergyParser
 
 if TYPE_CHECKING:
     from ..client.handlers import PynergyHandler

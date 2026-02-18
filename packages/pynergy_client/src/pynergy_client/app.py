@@ -10,8 +10,8 @@ import typer
 from click.core import ParameterSource
 from loguru import logger
 from platformdirs import user_config_path, user_log_path
-
 from pynergy_protocol import PynergyParser
+
 from . import __version__
 from .client.client import PynergyClient
 from .client.dispatcher import MessageDispatcher
@@ -26,7 +26,7 @@ app = typer.Typer(help=_('Pynergy Client'), add_completion=True)
 def version_callback(value: bool):
     if value:
         # 这里可以直接 print，或者使用 typer.echo
-        typer.echo(f"Pynergy Client Version: {__version__}")
+        typer.echo(f'Pynergy Client Version: {__version__}')
         raise typer.Exit()
 
 
@@ -74,8 +74,9 @@ def main(
     version: Annotated[
         bool | None,
         typer.Option(
-            "--version", "-v",
-            help=_("Show the version and exit."),
+            '--version',
+            '-v',
+            help=_('Show the version and exit.'),
             callback=version_callback,
             is_eager=True,  # 确保在其他参数处理之前运行
         ),

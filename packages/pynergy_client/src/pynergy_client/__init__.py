@@ -27,7 +27,8 @@ def get_version():
 
     try:
         from importlib.metadata import version
-        return version("pynergy-client")
+
+        return version('pynergy-client')
     except Exception as e:
         logger.warning(f'Failed to get version: {e}')
         return 'unknown'

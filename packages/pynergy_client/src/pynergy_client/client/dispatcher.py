@@ -3,8 +3,7 @@ import inspect
 from typing import Any
 
 from loguru import logger
-
-from packages.pynergy_protocol.src.pynergy_protocol import MsgID
+from pynergy_protocol import MsgID
 
 from .handlers import PynergyHandler
 from .protocols import ClientProtocol, DispatcherProtocol, MessageTask

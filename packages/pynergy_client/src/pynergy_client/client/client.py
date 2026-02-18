@@ -9,8 +9,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from loguru import logger
-
-from packages.pynergy_protocol.src.pynergy_protocol import (
+from pynergy_protocol import (
     HelloBackMsg,
     HelloMsg,
     MsgID,

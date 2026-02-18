@@ -10,7 +10,7 @@ from ..device import BaseDeviceContext, BaseKeyboardVirtualDevice, BaseMouseVirt
 if TYPE_CHECKING:
     from .client import PynergyClient
 
-from packages.pynergy_protocol.src.pynergy_protocol import (
+from pynergy_protocol import (
     CEnterMsg,
     CInfoAckMsg,
     CKeepAliveMsg,

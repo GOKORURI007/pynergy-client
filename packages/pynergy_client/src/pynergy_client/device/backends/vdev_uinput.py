@@ -4,8 +4,8 @@ import evdev
 from evdev import AbsInfo
 from evdev import ecodes as e
 from loguru import logger
+from pynergy_protocol import ModifierKeyMask
 
-from packages.pynergy_protocol.src.pynergy_protocol import ModifierKeyMask
 from pynergy_client.device.base import BaseKeyboardVirtualDevice, BaseMouseVirtualDevice
 
 

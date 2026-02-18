@@ -45,3 +45,13 @@ class Config:
     log_file: str = 'pynergy.log'  # Log file name
     log_level_file: LogLevel = 'WARNING'  # File output log level
     log_level_stdout: LogLevel = 'INFO'  # Stdout log level
+
+    def __post_init__(self):
+        if isinstance(self.pem_path, str):
+            if self.pem_path.startswith('~'):
+                self.pem_path = Path(self.pem_path).expanduser()
+            self.pem_path = Path(self.pem_path)
+        if isinstance(self.log_dir, str):
+            if self.log_dir.startswith('~'):
+                self.log_dir = Path(self.log_dir).expanduser()
+            self.log_dir = Path(self.log_dir)

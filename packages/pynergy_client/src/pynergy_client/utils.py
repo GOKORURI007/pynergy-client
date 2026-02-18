@@ -196,7 +196,9 @@ def get_or_create_client_cert(cfg: config.Config):
 
                 # Check expiration time (UTC)
                 # Leave 1 day buffer to prevent disconnection at critical point
-                remaining_time = cert.not_valid_after - datetime.datetime.utcnow()
+                remaining_time = cert.not_valid_after_utc - datetime.datetime.now(
+                    tz=datetime.timezone.utc
+                )
 
                 if remaining_time.total_seconds() <= 86400:  # Less than 24 hours
                     print(
@@ -205,7 +207,7 @@ def get_or_create_client_cert(cfg: config.Config):
                     should_generate = True
                 else:
                     print(
-                        f'[+] Certificate is valid, valid until: {cert.not_valid_after} ({remaining_time.days} days remaining)'
+                        f'[+] Certificate is valid, valid until: {cert.not_valid_after_utc} ({remaining_time.days} days remaining)'
                     )
         except Exception as e:
             print(f'[!] Failed to parse certificate: {e}, will attempt to regenerate.')
