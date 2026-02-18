@@ -232,6 +232,10 @@ systemctl --user daemon-reload
 systemctl --user enable --now pynergy-client
 ```
 
+### 3. TLS/mTLS
+
+⚠️ **重要**: 第一次连接时需要通过命令行启动进行确认，不能直接使用 systemd 服务。
+
 ## 配置文件
 
 配置文件默认位于 `~/.config/pynergy/client-config.json`，可通过 `--config` 选项指定配置文件路径。

@@ -227,6 +227,10 @@ systemctl --user daemon-reload
 systemctl --user enable --now pynergy-client
 ```
 
+### 3. TLS/mTLS
+
+⚠️ **Important**: The first connection needs to be confirmed through the command line start, and the systemd service cannot be used directly.
+
 ## Configuration
 
 The configuration file is located at `~/.config/pynergy/client-config.json` by default, and can be specified with the `--config` option.
