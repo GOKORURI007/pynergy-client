@@ -2,7 +2,7 @@
 
 # Pynergy
 
-![GitHub License](https://img.shields.io/github/license/GOUKOU007/pynergy?link=https%3A%2F%2Fgithub.com%2FGOKORURI007%2Fpynergy%2Fblob%2Fmaster%2FLICENSE)
+![GitHub License](https://img.shields.io/github/license/GOKORURI007/pynergy?link=https%3A%2F%2Fgithub.com%2FGOKORURI007%2Fpynergy%2Fblob%2Fmaster%2FLICENSE)
 ![Python Version](https://img.shields.io/badge/python-3.13%2B-blue)
 
 [English](./README.md) | [简体中文](./docs/README-zhCN.md)
