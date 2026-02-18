@@ -83,6 +83,8 @@ environment.systemPackages = [
 
 ## Environment Setup
 
+> Optional：Get screen information by `wlr-randr`.
+
 > ⚠️ **Important**: Currently, **pynergy** relies on the `uinput` kernel module to simulate input devices. For the program to run properly, you need to ensure that the current user has permission to access `/dev/uinput`.
 
 ### 1. General Linux Configuration (udev Rules)

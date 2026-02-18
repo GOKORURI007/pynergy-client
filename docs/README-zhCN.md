@@ -87,6 +87,8 @@ environment.systemPackages = [
 
 ## 环境准备
 
+> 可选：通过 `wlr-randr` 获取屏幕信息
+
 > ⚠️ **重要**：目前 **pynergy** 依赖 `uinput` 内核模块来模拟输入设备。为了让程序能够正常运行，你需要确保当前用户拥有访问
 > `/dev/uinput` 的权限。
 
