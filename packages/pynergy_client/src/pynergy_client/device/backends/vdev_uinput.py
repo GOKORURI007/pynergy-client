@@ -135,6 +135,12 @@ class UInputKeyboardDevice(BaseKeyboardVirtualDevice):
 
         self._ui.write(e.EV_KEY, key_code, value)
 
+    def tap_key(self, key_code: int) -> None:
+        """Press and release a key in one batch to avoid system key repeat."""
+        self._ui.write(e.EV_KEY, key_code, 1)  # down
+        self._ui.write(e.EV_KEY, key_code, 0)  # up
+        self._ui.syn()
+
     def release_all_key(self) -> None:
         for key_code in list(self.pressed_keys):
             self.send_key(key_code, False)

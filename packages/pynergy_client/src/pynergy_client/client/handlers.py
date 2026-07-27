@@ -69,6 +69,7 @@ class PynergyHandler:
         self.ctx = context
         self.mouse = mouse_device
         self.keyboard = keyboard_device
+        self._logically_held: set[int] = set()  # keys the server says are currently held
 
         self.last_mouse_time = 0
         self.interval = (
@@ -109,6 +110,7 @@ class PynergyHandler:
             '{log}', log=lambda: f'Entered screen at position: ({msg.entry_x}, {msg.entry_y})'
         )
         self.mouse.move_absolute(msg.entry_x, msg.entry_y)
+        self.mouse.syn()  # commit initial position immediately
         self.ctx.logical_pos = (msg.entry_x, msg.entry_y)
         client.state = ClientState.ACTIVE
 
@@ -129,6 +131,7 @@ class PynergyHandler:
         client.state = ClientState.CONNECTED
         self.keyboard.release_all_key()
         self.mouse.release_all_button()
+        self._logically_held.clear()
 
     @staticmethod
     async def on_cnop(msg: MsgBase, client=None):
@@ -149,27 +152,39 @@ class PynergyHandler:
     async def on_dkdn(self, msg: DKeyDownMsg, client: 'PynergyClient'):
         logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}')
         key_code = msg.key_button
-        self.keyboard.send_key(hid_to_ecode(synergy_to_hid(key_code)), True)
+        hid = synergy_to_hid(key_code)
+        ecode = hid_to_ecode(hid)
+        if ecode is not None:
+            self._logically_held.add(ecode)
+            self.keyboard.send_key(ecode, True)
 
     @device_check
     async def on_dkdl(self, msg: DKeyDownLangMsg, client: 'PynergyClient'):
         logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}')
         key_code = msg.key_button
-        self.keyboard.send_key(hid_to_ecode(synergy_to_hid(key_code)), True)
+        hid = synergy_to_hid(key_code)
+        ecode = hid_to_ecode(hid)
+        if ecode is not None:
+            self._logically_held.add(ecode)
+            self.keyboard.send_key(ecode, True)
 
     @device_check
     async def on_dkrp(self, msg: DKeyRepeatMsg, client: 'PynergyClient'):
         logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}')
 
         key_code = msg.key_button
-        if key_code not in self.keyboard.pressed_keys:
+        if key_code not in self.keyboard.pressed_keys and key_code not in self._logically_held:
             self.keyboard.send_key(hid_to_ecode(synergy_to_hid(key_code)), True)
 
     @device_check
     async def on_dkup(self, msg: DKeyUpMsg, client: 'PynergyClient'):
         logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}')
         key_code = msg.key_button
-        self.keyboard.send_key(hid_to_ecode(synergy_to_hid(key_code)), False)
+        hid = synergy_to_hid(key_code)
+        ecode = hid_to_ecode(hid)
+        if ecode is not None:
+            self._logically_held.discard(ecode)
+            self.keyboard.send_key(ecode, False)
 
     @device_check
     async def on_dmdn(self, msg: DMouseDownMsg, client: 'PynergyClient'):
@@ -260,7 +275,7 @@ class PynergyHandler:
         try:
             self.ctx.update_screen_info()
             self.ctx.sync_logical_to_real()
-        except Exception:
+        except Exception as e:
             logger.opt(lazy=True).warning('{log}', log=lambda: f'Failed to get mouse position: {e}')
         dinf_msg = DInfoMsg(
             0,

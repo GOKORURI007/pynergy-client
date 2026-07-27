@@ -19,7 +19,7 @@ class WaylandDeviceContext(BaseDeviceContext):
                 if mode['current']:
                     self.screen_size = (mode['width'], mode['height'])
                     return
-        except Exception:
+        except Exception as e:
             logger.opt(lazy=True).warning(
                 '{log}', log=lambda: f'Failed to get active screen resolution by wlr-randr: {e}'
             )
@@ -52,7 +52,7 @@ class WaylandDeviceContext(BaseDeviceContext):
                     return x, y
                 case _:
                     raise ValueError('Unsupported desktop environment')
-        except Exception:
+        except Exception as e:
             logger.opt(lazy=True).warning(
                 '{log}', log=lambda: f'get cursor pos by hyprctl failed: {e}'
             )
