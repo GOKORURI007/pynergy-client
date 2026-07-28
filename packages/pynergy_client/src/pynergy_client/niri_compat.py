@@ -244,14 +244,13 @@ def _make_niri_dkup(orig_dkup):
 
 
 def _make_niri_cinn(orig_cinn):
-    """Wrap on_cinn — normalize entry coords to mouse's ABS range and defer to original."""
+    """Wrap on_cinn — always normalize entry coords to mouse's ABS range then defer to original."""
 
     @wraps(orig_cinn)
     async def wrapper(self, msg, client):
         actual_w, actual_h = self.ctx.screen_size
         abs_max_w, abs_max_h = 1920, 1080  # UInputMouseDevice default ABS range
-        # Only normalize if coords exceed ABS range (avoids double-normalization)
-        if msg.entry_x > abs_max_w or msg.entry_y > abs_max_h:
+        if actual_w > 0 and actual_h > 0:
             scale_x = abs_max_w / actual_w
             scale_y = abs_max_h / actual_h
             norm_x = int(msg.entry_x * scale_x)
@@ -268,13 +267,14 @@ def _make_niri_cinn(orig_cinn):
 
 
 def _make_niri_dmmv(orig_dmmv):
-    """Wrap on_dmmv — normalize move coords to mouse's ABS range and defer to original."""
+def _make_niri_dmmv(orig_dmmv):
+    """Wrap on_dmmv — always normalize move coords to mouse's ABS range then defer to original."""
 
     @wraps(orig_dmmv)
     async def wrapper(self, msg, client):
         actual_w, actual_h = self.ctx.screen_size
         abs_max_w, abs_max_h = 1920, 1080  # UInputMouseDevice default ABS range
-        if msg.x > abs_max_w or msg.y > abs_max_h:
+        if actual_w > 0 and actual_h > 0:
             scale_x = abs_max_w / actual_w
             scale_y = abs_max_h / actual_h
             norm_x = int(msg.x * scale_x)
@@ -284,8 +284,6 @@ def _make_niri_dmmv(orig_dmmv):
         await orig_dmmv(self, msg, client)
 
     return wrapper
-
-def patch_handler(handler_class):
     """
     Monkey-patch PynergyHandler to add Mac deskflow key_id support and niri compatibility.
 
