@@ -93,6 +93,8 @@ SYNERGY_KEY_ID_MAP: dict[int, int] = {
     0xFFE5: e.KEY_CAPSLOCK,
     0xFFE7: e.KEY_LEFTMETA,
     0xFFE8: e.KEY_LEFTMETA,
+    0xFFEB: e.KEY_LEFTMETA,  # Mac deskflow sends left Command as right Meta
+    0xFFEC: e.KEY_LEFTMETA,  # right Command (if also mis-mapped)
     0xFFE9: e.KEY_LEFTALT,
     0xFFEA: e.KEY_LEFTALT,
 }
@@ -154,7 +156,7 @@ def _make_niri_dkdn(orig_dkdn):
                 self.keyboard.tap_key(ecode)
         else:
             # Fallback to original key_button logic
-            from ..keymaps import hid_to_ecode, synergy_to_hid
+            from pynergy_client.keymaps import hid_to_ecode, synergy_to_hid
             key_code = msg.key_button
             hid = synergy_to_hid(key_code)
             ecode2 = hid_to_ecode(hid)
@@ -184,7 +186,7 @@ def _make_niri_dkdl(orig_dkdl):
             else:
                 self.keyboard.tap_key(ecode)
         else:
-            from ..keymaps import hid_to_ecode, synergy_to_hid
+            from pynergy_client.keymaps import hid_to_ecode, synergy_to_hid
             key_code = msg.key_button
             hid = synergy_to_hid(key_code)
             ecode2 = hid_to_ecode(hid)
@@ -232,7 +234,7 @@ def _make_niri_dkup(orig_dkup):
                 self._logically_held.discard(e.KEY_LEFTSHIFT)
                 self.keyboard.send_key(e.KEY_LEFTSHIFT, False)
         else:
-            from ..keymaps import hid_to_ecode, synergy_to_hid
+            from pynergy_client.keymaps import hid_to_ecode, synergy_to_hid
             key_code = msg.key_button
             ecode2 = hid_to_ecode(synergy_to_hid(key_code))
             if ecode2 is not None:
@@ -242,48 +244,46 @@ def _make_niri_dkup(orig_dkup):
 
 
 def _make_niri_cinn(orig_cinn):
-    """Wrap on_cinn to record entry position for coordinate offset correction."""
+    """Wrap on_cinn — normalize entry coords to mouse's ABS range and defer to original."""
 
     @wraps(orig_cinn)
     async def wrapper(self, msg, client):
-        self._entry_x = msg.x
-        self._entry_y = msg.y
-        self._dmmv_outside = True
-        logger.info(
-            '[niri] CEnter: x={} y={} (screen={})',
-            msg.x, msg.y, self.ctx.screen_size,
-        )
+        actual_w, actual_h = self.ctx.screen_size
+        abs_max_w, abs_max_h = 1920, 1080  # UInputMouseDevice default ABS range
+        # Only normalize if coords exceed ABS range (avoids double-normalization)
+        if msg.entry_x > abs_max_w or msg.entry_y > abs_max_h:
+            scale_x = abs_max_w / actual_w
+            scale_y = abs_max_h / actual_h
+            norm_x = int(msg.entry_x * scale_x)
+            norm_y = int(msg.entry_y * scale_y)
+            logger.info(
+                '[niri] CEnter: raw=({}, {}) screen={} -> norm=({}, {})',
+                msg.entry_x, msg.entry_y, self.ctx.screen_size, norm_x, norm_y,
+            )
+            msg.entry_x = norm_x
+            msg.entry_y = norm_y
         await orig_cinn(self, msg, client)
 
     return wrapper
 
 
 def _make_niri_dmmv(orig_dmmv):
-    """Wrap on_dmmv to skip DMMV events with coordinates outside local screen.
-
-    The Mac deskflow server sometimes sends DMMV in global coordinate space
-    (including the server's own screen width as offset). These out-of-bounds
-    events would get clamped to the edge, making the cursor invisible.
-    Instead, skip them and keep the cursor at the CEnter position until
-    valid in-range coordinates arrive.
-    """
+    """Wrap on_dmmv — normalize move coords to mouse's ABS range and defer to original."""
 
     @wraps(orig_dmmv)
     async def wrapper(self, msg, client):
-        sw, sh = self.ctx.screen_size
-        if msg.x >= sw or msg.y >= sh:
-            logger.opt(lazy=True).debug(
-                '{log}', log=lambda: f'[niri] Skipping DMMV outside screen: ({msg.x},{msg.y}) >= ({sw},{sh})'
-            )
-            return
-        # Once we receive a valid in-range coordinate, stop skipping
-        logger.opt(lazy=True).trace(
-            '{log}', log=lambda: f'[niri] DMMV: x={msg.x} y={msg.y}'
-        )
-        self.mouse.move_absolute(msg.x, msg.y)
+        actual_w, actual_h = self.ctx.screen_size
+        abs_max_w, abs_max_h = 1920, 1080  # UInputMouseDevice default ABS range
+        if msg.x > abs_max_w or msg.y > abs_max_h:
+            scale_x = abs_max_w / actual_w
+            scale_y = abs_max_h / actual_h
+            norm_x = int(msg.x * scale_x)
+            norm_y = int(msg.y * scale_y)
+            msg.x = norm_x
+            msg.y = norm_y
+        await orig_dmmv(self, msg, client)
 
     return wrapper
-
 
 def patch_handler(handler_class):
     """
@@ -294,11 +294,11 @@ def patch_handler(handler_class):
         from pynergy_client.client.handlers import PynergyHandler
         patch_handler(PynergyHandler)
     """
-    handler_class.on_cinn = _make_niri_cinn(handler_class.on_cinn)
     handler_class.on_dkdn = _make_niri_dkdn(handler_class.on_dkdn)
     handler_class.on_dkdl = _make_niri_dkdl(handler_class.on_dkdl)
     handler_class.on_dkrp = _make_niri_dkrp(handler_class.on_dkrp)
     handler_class.on_dkup = _make_niri_dkup(handler_class.on_dkup)
+    handler_class.on_cinn = _make_niri_cinn(handler_class.on_cinn)
     handler_class.on_dmmv = _make_niri_dmmv(handler_class.on_dmmv)
     logger.info('[niri] PynergyHandler patched for Mac deskflow + niri compatibility')
 
