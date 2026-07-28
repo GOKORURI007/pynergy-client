@@ -244,46 +244,30 @@ def _make_niri_dkup(orig_dkup):
 
 
 def _make_niri_cinn(orig_cinn):
-    """Wrap on_cinn — always normalize entry coords to mouse's ABS range then defer to original."""
+    """Wrap on_cinn — log entry coords and pass through raw (no normalization)."""
 
     @wraps(orig_cinn)
     async def wrapper(self, msg, client):
-        actual_w, actual_h = self.ctx.screen_size
-        abs_max_w, abs_max_h = 1920, 1080  # UInputMouseDevice default ABS range
-        if actual_w > 0 and actual_h > 0:
-            scale_x = abs_max_w / actual_w
-            scale_y = abs_max_h / actual_h
-            norm_x = int(msg.entry_x * scale_x)
-            norm_y = int(msg.entry_y * scale_y)
-            logger.info(
-                '[niri] CEnter: raw=({}, {}) screen={} -> norm=({}, {})',
-                msg.entry_x, msg.entry_y, self.ctx.screen_size, norm_x, norm_y,
-            )
-            msg.entry_x = norm_x
-            msg.entry_y = norm_y
+        logger.info(
+            '[niri] CEnter: x={}, y={}, screen={}',
+            msg.entry_x, msg.entry_y, self.ctx.screen_size,
+        )
         await orig_cinn(self, msg, client)
 
     return wrapper
 
 
 def _make_niri_dmmv(orig_dmmv):
-def _make_niri_dmmv(orig_dmmv):
-    """Wrap on_dmmv — always normalize move coords to mouse's ABS range then defer to original."""
+    """Wrap on_dmmv — log move coords and pass through raw (no normalization)."""
 
     @wraps(orig_dmmv)
     async def wrapper(self, msg, client):
-        actual_w, actual_h = self.ctx.screen_size
-        abs_max_w, abs_max_h = 1920, 1080  # UInputMouseDevice default ABS range
-        if actual_w > 0 and actual_h > 0:
-            scale_x = abs_max_w / actual_w
-            scale_y = abs_max_h / actual_h
-            norm_x = int(msg.x * scale_x)
-            norm_y = int(msg.y * scale_y)
-            msg.x = norm_x
-            msg.y = norm_y
         await orig_dmmv(self, msg, client)
 
     return wrapper
+
+
+def patch_handler(handler_class):
     """
     Monkey-patch PynergyHandler to add Mac deskflow key_id support and niri compatibility.
 
