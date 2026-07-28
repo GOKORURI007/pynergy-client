@@ -173,8 +173,9 @@ class PynergyHandler:
         logger.opt(lazy=True).debug('{log}', log=lambda: f'Handle {msg}')
 
         key_code = msg.key_button
-        if key_code not in self.keyboard.pressed_keys and key_code not in self._logically_held:
-            self.keyboard.send_key(hid_to_ecode(synergy_to_hid(key_code)), True)
+        ecode = hid_to_ecode(synergy_to_hid(key_code))
+        if ecode is not None and ecode not in self.keyboard.pressed_keys and ecode not in self._logically_held:
+            self.keyboard.send_key(ecode, True)
 
     @device_check
     async def on_dkup(self, msg: DKeyUpMsg, client: 'PynergyClient'):
