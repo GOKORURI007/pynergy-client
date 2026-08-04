@@ -77,6 +77,7 @@ def init_backend(
     device_ctx = None
     mouse = None
     keyboard = None
+    screen_size = (1920, 1080)  # fallback default
 
     platform_info = PlatformInfo()
     match platform_info.platform.lower():
@@ -84,8 +85,10 @@ def init_backend(
             match platform_info.session_type.lower():
                 case 'wayland':
                     device_ctx = WaylandDeviceContext()
+                    device_ctx.update_screen_info()  # detect actual resolution early
+                    screen_size = device_ctx.screen_size
                     if not cfg.mouse_backend:
-                        mouse = UInputMouseDevice()
+                        mouse = UInputMouseDevice(screen_size=screen_size)
                     if not cfg.keyboard_backend:
                         keyboard = UInputKeyboardDevice()
                 case _:
@@ -100,7 +103,7 @@ def init_backend(
     if cfg.mouse_backend is not None:
         match cfg.mouse_backend:
             case 'uinput':
-                mouse = UInputMouseDevice()
+                mouse = UInputMouseDevice(screen_size=screen_size)
             case 'libei':
                 raise NotImplementedError('libei backend is WiP')
             case 'wlr':
